@@ -15,6 +15,9 @@
 (def *state
   (atom zero))
 
+(defn log []
+  (u/pp @*state))
+
 (defn clear-input! []
   (swap! *state assoc-in [:chat :input] ""))
 
@@ -27,8 +30,8 @@
     (assoc-in state [:chat :room] (db/room_ref->data room))))
 
 (defn send-message! []
-  (clear-input!)
-  (db/room_post-message! *state))
+  (db/room_post-message! *state)
+  (clear-input!))
 
 (defn on-login! [email]
   (let [[room1 :as rooms] (db/room_ids)]

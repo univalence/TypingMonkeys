@@ -7,7 +7,6 @@
 ;; temp: DEV ------
 (swap! *state assoc :auth {:email "pierrebaille@gmail.com" :password "password"})
 
-
 (def renderer
   (fx/create-renderer
    :middleware (fx/wrap-map-desc assoc :fx/type views/root)
@@ -16,3 +15,6 @@
 (fx/mount-renderer *state renderer)
 
 
+(comment :scratch
+
+         (println @*state))
