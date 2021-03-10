@@ -17,4 +17,4 @@
 
 (comment :scratch
 
-         (println @*state))
+         (state/log))

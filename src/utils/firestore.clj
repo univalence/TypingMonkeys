@@ -14,17 +14,6 @@
   (or (doc-ref? x)
       (coll-ref? x)))
 
-(defn pull-doc [x]
-  (cond
-    (doc-ref? x) (f/pull-doc x)
-    (map? x) x))
-
-(defn watch-coll! [db kw on-change]
-  (st/consume
-   on-change
-   (f/->stream (f/coll db (name kw))
-               {:plain-fn vec})))
-
 (defn overide-print-methods []
 
   (defmethod print-method DocumentReference [^DocumentReference dr ^Writer w]
@@ -38,29 +27,3 @@
 
   (defmethod print-method QuerySnapshot [^QuerySnapshot _ ^Writer w]
     (.write w "QuerySnapshot instance")))
-
-
-
-
-
-(comment
-
- (overide-print-methods)
- (defonce db (f/client-with-creds
-              "data/conatus-ef5f3-firebase-adminsdk-mowye-1aaf077bc3.json"))
-
- (type (get (.getData (.get (.get (f/doc db "rooms/room1"))))
-       "members"))
-
- (-> (f/coll db "rooms")
-     (f/filter-contains-any "members" [(f/doc db  "users/pierrebaille@gmail.com")])
-     (.get)
-     (.get)
-     (.getDocuments))
-
- (-> (f/coll db "rooms")
-     (f/filter-contains-any "members" [(f/doc db  "users/pierrebaille@gmail.com")])
-     (f/query-snap)
-     (f/query-snap->doc-snaps))
-
- )

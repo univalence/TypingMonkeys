@@ -38,8 +38,8 @@
     (db/room_watch! *state room1)
     (swap! *state
            (fn [state]
-
-             (-> (assoc state :page :chat)
+             (-> (dissoc state :auth)
+                 (assoc :page :chat)
                  (assoc-in [:chat :rooms] rooms)
                  (with-user email)
                  (with-room room1))))))
