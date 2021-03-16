@@ -1,8 +1,7 @@
-(ns chat.state
-  (:require [utils.misc :as u]
-            [chat
-             [db :as db]
-             [auth :as auth]])
+(ns typing-monkeys.chat.state
+  (:require [typing-monkeys.utils.misc :as u]
+            [typing-monkeys.chat.db :as db]
+            [typing-monkeys.auth :as auth])
   (:import [javafx.scene.input KeyCode KeyEvent]))
 
 (def zero
@@ -34,6 +33,7 @@
   (clear-input!))
 
 (defn on-login! [email]
+  (println "logged in! ")
   (let [[room1 :as rooms] (db/room_ids)]
     (db/room_watch! *state room1)
     (swap! *state
@@ -50,7 +50,7 @@
 (defn event-handler [event]
   #_(println "event " event)
   (let [etype (:event/type event)]
-    (when (= "chat.event" (namespace etype))
+    (when (= "typing_monkeys.chat.event" (namespace etype))
       (case (keyword (name etype))
 
         :type (swap! *state assoc-in [:chat :input] (:fx/event event))

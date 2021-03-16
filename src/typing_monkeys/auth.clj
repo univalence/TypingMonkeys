@@ -1,4 +1,4 @@
-(ns chat.auth
+(ns typing-monkeys.auth
   (:require [clj-http.client :as http]))
 
 (do :auth
@@ -15,8 +15,8 @@
        ko))
 
     #_(sign-in "pierrebaille@gmail.com" "password"
-               (fn [x] (pp :ok x))
-               (fn [x] (pp :ko x)))
+               (fn [x] (println :ok x))
+               (fn [x] (println :ko x)))
 
     ;; sign up
     (defn sign-up [email password ok ko]

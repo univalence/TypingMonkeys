@@ -1,4 +1,4 @@
-(ns utils.firestore
+(ns typing-monkeys.utils.firestore
   (:require [firestore-clj.core :as f]
             [manifold.stream :as st])
   (:import (com.google.cloud.firestore DocumentReference CollectionReference Firestore DocumentSnapshot QuerySnapshot)

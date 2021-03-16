@@ -41,31 +41,28 @@
     (defn error [& xs]
       (throw (Exception. (with-out-str (apply pp xs))))))
 
-
-;;
-
-(def o vector)
-
 (def data
-  [(o [1 1] [0 0] [:ins :c])
-   (o [1 2] [1 1] [:ins :m])
-   (o [1 3] [1 2] [:ins :d])
-   (o [1 6] [1 2] [:del])
-   (o [2 6] [1 3] [:ins :d])
-   (o [1 7] [1 3] [:del])
-   (o [2 7] [2 6] [:ins :e])
-   (o [3 7] [1 3] [:ins :a])
-   (o [1 8] [1 1] [:ins :t])
-   (o [2 8] [2 7] [:ins :l])
-   (o [3 8] [3 7] [:ins :l])
-   (o [1 9] [1 8] [:ins :r])
-   (o [3 9] [3 8] [:ins :t])
-   (o [1 10] [1 9] [:ins :l])])
+  [[[1 1] [0 0] [:ins :c]]
+   [[1 2] [1 1] [:ins :m]]
+   [[1 3] [1 2] [:ins :d]]
+   [[1 6] [1 2] [:del]]
+   [[2 6] [1 3] [:ins :d]]
+   [[1 7] [1 3] [:del]]
+   [[2 7] [2 6] [:ins :e]]
+   [[3 7] [1 3] [:ins :a]]
+   [[1 8] [1 1] [:ins :t]]
+   [[2 8] [2 7] [:ins :l]]
+   [[3 8] [3 7] [:ins :l]]
+   [[1 9] [1 8] [:ins :r]]
+   [[3 9] [3 8] [:ins :t]]
+   [[1 10] [1 9] [:ins :l]]])
 
 (do :one
 
+    ;; inserting new operation : 0(1)
+    ;; building output array : O(n^2)
+
     (defn exec [v [id parent [op arg] :as o]]
-      #_(pp 'exec o 'on v)
       (if (empty? v)
         (case op
           :ins [[id arg]]
@@ -76,62 +73,74 @@
             :del (assoc-in v [idx 1] nil))
           (error "no parent" v o))))
 
-    (let [x (reduce exec [] data)]
-      (->> (map second x)
-           (remove nil?)
-           (map name)
-           (apply str))))
-
-
+    (defn operations->str [ops]
+      (let [x (reduce exec [] ops)]
+        (->> (map second x)
+             (remove nil?)
+             (map name)
+             (apply str)))))
 
 (do :two
 
-    (defc node [id op children])
+    ;; inserting new operation : O(n)
+    ;; building output array : O(n)
 
-    (def zero (node [0 0] [:nop] []))
+    (defc tree [id op children])
 
-    (defn node_insert-children [n [eid _ data]]
-      #_(println "noe ins ch" node eid data)
-      (let [child (node eid data [])]
-        #_(println "child " child)
+    (def zero (tree [0 0] [:nop] []))
+
+    (defn tree_insert-children
+      [n [eid _ data]]
+      (let [child (tree eid data [])]
         (update n
                 :children
                 (fn [xs]
-                  #_(println "update-child")
                   (if (empty? xs)
                     [child]
                     (let [idx (count (take-while (fn [{id :id}] (neg? (compare id eid))) xs))]
                       (vec/insert xs idx child)))))))
 
-    (defn insert [{:as node :keys [id children]}
+    (defn insert [{:as tree :keys [id children]}
                   [_ pid _ :as event]]
       (if (= id pid)
-        (node_insert-children node event)
+        (tree_insert-children tree event)
         (when-not (empty? children)
           (loop [[c1 & cs] children done []]
             (if-let [child (insert c1 event)]
-              (assoc node :children (vec/cat done (cons child cs)))
+              (assoc tree :children (vec/cat done (cons child cs)))
               (when cs (recur cs (conj done c1))))))))
 
-    (def red (reduce insert zero data))
-
-    #_(pp red)
-
-    (defn node->vec
-      ([node] (node->vec node 0 []))
-      ([{:keys [children op]} at v]
-       #_(println v op at)
+    (defn tree-seq
+      ([tree] (tree-seq tree 0 []))
+      ([{:keys [children op id]} at v]
        (let [verb (first op)
              v2 (case verb
-                  :del (vec/put v (dec at) nil)
-                  :ins (vec/insert v at (second op))
+                  :del (vec/upd v (dec at) (fn [[id char _]] [id char false]))
+                  :ins (vec/insert v at [id (name (second op)) true])
                   :nop v)
              at (if (= :ins verb) (inc at) at)]
          (reduce (fn [v child]
-                   (node->vec child at v))
+                   (tree-seq child at v))
                  v2 children))))
 
-    #_(node->vec red)
+    (defn tree-seq->str [n]
+      (->> n
+           (filter #(nth % 2))
+           (map second)
+           (apply str)))
+
+    (defn tree->str [t]
+      (-> t tree-seq tree-seq->str))
+
+    (let [tree (reduce insert zero data)]
+      (tree-seq tree)
+      (tree->str tree))
+
+    (defn last-id [{:as tree :keys [id children]}]
+      (if-let [cs (seq children)]
+        (last (sort-by second (map last-id cs)))
+        id))
+
     )
 
 

@@ -1,6 +1,6 @@
-(ns chat.core
+(ns typing-monkeys.chat.core
   (:require [cljfx.api :as fx]
-            [chat
+            [typing-monkeys.chat
              [views :as views]
              [state :as state :refer [*state]]]))
 

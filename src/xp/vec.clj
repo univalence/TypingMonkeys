@@ -95,6 +95,10 @@
   (when-let [i (element-idx v at)]
     (c/assoc v i x)))
 
+(defn upd [v at f]
+  (when-let [i (element-idx v at)]
+    (c/update v i f)))
+
 (defn- default-merger [f]
   (fn [x y]
     (cond (not x) y

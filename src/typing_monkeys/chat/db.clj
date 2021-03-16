@@ -1,28 +1,19 @@
-(ns chat.db
+
+(ns typing-monkeys.chat.db
   (:require [firestore-clj.core :as f]
-            [utils.firestore :as fu]
+            [typing-monkeys.db :as db :refer [db]]
+            [typing-monkeys.utils.firestore :as fu]
             [manifold.stream :as st]))
-
-(fu/overide-print-methods)
-
-(defonce db (f/client-with-creds
-             "data/conatus-ef5f3-firebase-adminsdk-mowye-1aaf077bc3.json"))
-
-(defn with-ref [ref data]
-  (vary-meta data assoc :ref ref))
-
-(defn data->ref [x]
-  (-> x meta :ref))
 
 (defn user_ref->data [ref]
   (let [user-ref (f/pull-doc ref)]
-    (with-ref ref
+    (db/with-ref ref
               {:id     (f/id ref)
                :pseudo (get user-ref "pseudo")})))
 
 (defn message_ref->data [ref]
   (let [message-ref (f/pull-doc ref)]
-    (with-ref ref
+    (db/with-ref ref
               {:id        (f/id ref)
                :content   (get message-ref "content")
                :from      (user_ref->data (get message-ref "from"))
@@ -32,10 +23,10 @@
   (let [pulled (f/pull-doc ref)
         message-ref (f/coll ref "messages")
         members-ref (get pulled "members")]
-    (with-ref ref
+    (db/with-ref ref
               {:id       (f/id ref)
-               :messages (with-ref message-ref (mapv message_ref->data (f/docs message-ref)))
-               :members  (with-ref members-ref (mapv user_ref->data members-ref))})))
+               :messages (db/with-ref message-ref (mapv message_ref->data (f/docs message-ref)))
+               :members  (db/with-ref members-ref (mapv user_ref->data members-ref))})))
 
 (defn user_ref [email]
   (-> (f/coll db "users")
@@ -110,7 +101,7 @@
 (defn room_post-message! [*state]
   (let [{user :user
          {:keys [input room]} :chat} @*state
-        msg (message (data->ref user) input)]
+        msg (message (db/data->ref user) input)]
     #_(println "posting message " msg)
     (swap! *state update-in [:chat :room :messages] conj msg)
     (f/add! (f/coll db (str "rooms/" (:id room) "/messages"))
@@ -120,6 +111,14 @@
 (comment :scratch
 
          (do
+           (room_create! (f/doc db "users/pierrebaille@gmail.com") "lobby")
+
+           (room_add-member! (f/doc db "rooms/secondary")
+                             (f/doc db "users/francois@univalence.io"))
+
+           (room_add-member! (f/doc db "rooms/room3")
+                             (f/doc db "users/bastien.guihard@univalence.io"))
+
            (room_create! (f/doc db "users/pierrebaille@gmail.com") "room6")
            (def a1 (atom {}))
            (def close (room_watch! a1 "room6"))

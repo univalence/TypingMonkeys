@@ -12,4 +12,8 @@ pom.xml.asc
 .hg/
 *.iml
 /.idea/
+node_modules
+.cpcache
+.shadow-cljs
+resources/compiled
 

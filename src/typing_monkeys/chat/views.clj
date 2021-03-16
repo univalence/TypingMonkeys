@@ -1,4 +1,7 @@
-(ns chat.views)
+(ns typing-monkeys.chat.views)
+
+(defn chat-event [k]
+  (keyword "typing_monkeys.chat.event" (name k)))
 
 (defn message [{:keys [content from]}]
   #_(println "render message" content from)
@@ -20,13 +23,13 @@
    :children [{:fx/type    :button
                :text       room-id
                :pref-width 300
-               :on-action  {:event/type :chat.event/swap-room
+               :on-action  {:event/type (chat-event :swap-room)
                             :room-id    room-id}}]})
 
 (defn chat [{:as                        state
              user                       :user
              {:keys [room input rooms]} :chat}]
-  #_(println "render chat ")
+  #_(println "render typing_monkeys.chat ")
   #_(println (user-data user))
   #_(println (room-data room))
   {:fx/type :stage
@@ -56,7 +59,7 @@
                                             {:fx/type    :button
                                              :text       "logout"
                                              :pref-width 100
-                                             :on-action  {:event/type :chat.event/logout}}
+                                             :on-action  {:event/type (chat-event :logout)}}
 
                                             {:fx/type       :scroll-pane
                                              :grid-pane/row 1
@@ -84,8 +87,8 @@
                                                                  :v-box/margin    5
                                                                  :text            input
                                                                  :prompt-text     "Write message and press ENTER"
-                                                                 :on-text-changed {:event/type :chat.event/type}
-                                                                 :on-key-pressed  {:event/type :chat.event/send}}]}]}}})
+                                                                 :on-text-changed {:event/type (chat-event :type)}
+                                                                 :on-key-pressed  {:event/type (chat-event :send)}}]}]}}})
 
 (defn login [{{:keys [email password]} :auth}]
   {:fx/type :stage
@@ -100,20 +103,20 @@
                                    :v-box/margin    5
                                    :text            email
                                    :prompt-text     "Email"
-                                   :on-text-changed {:event/type :chat.event/type-email}
+                                   :on-text-changed {:event/type (chat-event :type-email)}
                                    }
 
                                   {:fx/type         :password-field
                                    :v-box/margin    5
                                    :text            password
                                    :prompt-text     "Password"
-                                   :on-text-changed {:event/type :chat.event/type-password}
+                                   :on-text-changed {:event/type (chat-event :type-password)}
                                    }
 
                                   {:fx/type      :button
                                    :v-box/margin 5
                                    :text         "Authenticate"
-                                   :on-action    {:event/type :chat.event/authenticate}}]}}})
+                                   :on-action    {:event/type (chat-event :authenticate)}}]}}})
 
 
 (defn root [{:as state :keys [page]}]
