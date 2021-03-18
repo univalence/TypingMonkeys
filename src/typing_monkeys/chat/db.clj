@@ -1,57 +1,36 @@
-
 (ns typing-monkeys.chat.db
   (:require [firestore-clj.core :as f]
             [typing-monkeys.db :as db :refer [db]]
-            [typing-monkeys.utils.firestore :as fu]
-            [manifold.stream :as st]))
+            [typing-monkeys.chat.data :as data]
+            [typing-monkeys.utils.walk :as walk]
+            [typing-monkeys.auth.data :as auth-data]))
 
-(defn user_ref->data [ref]
-  (let [user-ref (f/pull-doc ref)]
-    (db/with-ref ref
-              {:id     (f/id ref)
-               :pseudo (get user-ref "pseudo")})))
 
-(defn message_ref->data [ref]
-  (let [message-ref (f/pull-doc ref)]
-    (db/with-ref ref
-              {:id        (f/id ref)
-               :content   (get message-ref "content")
-               :from      (user_ref->data (get message-ref "from"))
-               :timestamp (get message-ref "timestamp")})))
-
-(defn room_ref->data [ref]
-  (let [pulled (f/pull-doc ref)
-        message-ref (f/coll ref "messages")
-        members-ref (get pulled "members")]
-    (db/with-ref ref
-              {:id       (f/id ref)
-               :messages (db/with-ref message-ref (mapv message_ref->data (f/docs message-ref)))
-               :members  (db/with-ref members-ref (mapv user_ref->data members-ref))})))
-
-(defn user_ref [email]
-  (-> (f/coll db "users")
-      (f/doc email)))
-
-(defn room_ref [room-id]
+(defn get-room [room-id]
   (-> (f/coll db "rooms")
-      (f/doc room-id)))
+      (f/doc room-id)
+      data/room-ref->data))
 
-(defn room_ids []
+(defn get-room-ids []
   (->> (f/coll db "rooms")
        (f/docs)
        (map f/id)
        (sort)))
 
-(defn message [user content]
-  {"content"   content
-   "from"      user
-   "timestamp" (System/nanoTime)})
+(defn room-stream [id]
+  (f/->stream (f/doc db (str "rooms/" id))
+              {:plain-fn (comp data/room-ref->data f/ref)}))
+
+(defn message-stream [room-id]
+  (f/->stream (f/coll db (str "rooms/" room-id "/messages"))
+              {:plain-fn (fn [x] (mapv (comp data/message-ref->data f/ref) x))}))
 
 (defn room_create! [user-ref room-id]
   (f/create! (f/doc db (str "rooms/" room-id))
              {"members" [user-ref]})
   (f/add! (f/coll db (str "rooms/" room-id "/messages"))
-          (message user-ref (str "welcome to " room-id "."))))
+          {"from" user-ref
+           "content" (str "welcome to " room-id ".")}))
 
 (defn room_add-member! [room-ref user-ref]
   (let [members (vec (get (f/pull-doc room-ref) "members"))]
@@ -65,47 +44,11 @@
       (f/merge! room-ref
                 {"members" (filter (partial = user-ref) members)}))))
 
-(defn room_stop! [*state]
-  (when-let [stop! (get-in @*state [:chat :room :stop!])]
-    (stop!)))
+(defn room_add-message! [room message]
+  (f/add! (f/coll db (str "rooms/" (:id room) "/messages"))
+          (walk/stringify-keys (update message :user db/data->ref))))
 
-(defn room_watch! [*state room-id]
 
-  (room_stop! *state)
-
-  (let [stream1
-        (f/->stream (f/doc db (str "rooms/" room-id))
-                    {:plain-fn identity})
-
-        stream2
-        (f/->stream (f/coll db (str "rooms/" room-id "/messages"))
-                    {:plain-fn identity})]
-
-    (st/consume
-     (fn [x]
-       (println "room-upd " #_x)
-       (swap! *state update-in [:chat :room] merge (room_ref->data (f/ref x))))
-     stream1)
-
-    (st/consume
-     (fn [x]
-       (println "message-upd " #_x)
-       (swap! *state assoc-in [:chat :room :messages] (mapv (comp message_ref->data f/ref) x)))
-     stream2)
-
-    (swap! *state assoc-in [:chat :room :stop!]
-           (fn close! []
-             (st/close! stream1)
-             (st/close! stream2)))))
-
-(defn room_post-message! [*state]
-  (let [{user :user
-         {:keys [input room]} :chat} @*state
-        msg (message (db/data->ref user) input)]
-    #_(println "posting message " msg)
-    (swap! *state update-in [:chat :room :messages] conj msg)
-    (f/add! (f/coll db (str "rooms/" (:id room) "/messages"))
-            msg)))
 
 
 (comment :scratch

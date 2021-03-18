@@ -1,8 +1,8 @@
 (ns typing-monkeys.chat.core
   (:require [cljfx.api :as fx]
             [typing-monkeys.chat
-             [views :as views]
-             [state :as state :refer [*state]]]))
+             [view :as views]
+             [data :as state :refer [*state]]]))
 
 ;; temp: DEV ------
 (swap! *state assoc :auth {:email "pierrebaille@gmail.com" :password "password"})

@@ -11,14 +11,11 @@
   camel-snake-kebab {:mvn/version "0.4.2"}
 
   cljfx {:mvn/version "1.7.13"}
+  cljfx/css {:mvn/version "1.1.0"}
 
   com.google.firebase/firebase-admin {:mvn/version "7.1.0"}
   lurodrigo/firestore-clj {:mvn/version "1.2.1"}
 
-  ;; web views
-  org.clojure/clojurescript      {:mvn/version "1.10.764"}
-  thheller/shadow-cljs           {:mvn/version "2.11.18"}
-  reagent                        {:mvn/version "1.0.0-alpha2"}
   }
 
  :aliases
