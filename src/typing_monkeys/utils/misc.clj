@@ -5,7 +5,8 @@
 
 (do :misc
     (def catv (comp vec concat))
-    (def mapcatv (comp vec mapcat)))
+    (def mapcatv (comp vec mapcat))
+    (defn first-where [f xs] (first (filter f xs))))
 
 (do :log-debug
 

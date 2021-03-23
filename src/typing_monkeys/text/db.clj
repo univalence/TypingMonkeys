@@ -48,19 +48,17 @@
 
 (defn sync-state! [{:as text :keys [tree user position]} uuid]
   #_(println "sync-state " (db/data->ref tree) tree)
-  (let [local-changes (pp "local-changes: " (-> text meta :local-changes))]
+  (let [local-changes (-> text meta :local-changes)]
     (f/update! (db/data->ref text)
-               (fn [x] (do ; pp "updating: "
-                         (-> x
-                             (assoc "last-updater" uuid)
-                             (update "tree" (fn [tree] (tree_syncable (reduce d/insert (tree_format-data tree) local-changes))))
-                             (update "members" (fn [members]
-                                                 (mapv (fn [member]
-                                                         #_(pp "updating-position " k member (db/data->ref (get member "user")))
-                                                         (if (= user (get member "user"))
-                                                           (assoc (into {} member) "position" position)
-                                                           member))
-                                                       members)))))))))
+               (fn [x] (-> x
+                           (assoc "last-updater" uuid)
+                           (update "tree" (fn [tree] (tree_syncable (reduce d/insert (tree_format-data tree) local-changes))))
+                           (update "members" (fn [members]
+                                               (mapv (fn [member]
+                                                       (if (= user (get member "user"))
+                                                         (assoc (into {} member) "position" position)
+                                                         member))
+                                                     members))))))))
 
 (defn watch-text [id on-change]
   (st/consume (fn [x]

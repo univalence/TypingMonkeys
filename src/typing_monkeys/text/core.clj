@@ -7,7 +7,7 @@
   (:import [javafx.scene.input KeyCode KeyEvent]
            (java.util UUID)))
 
-#_(db/reset-first-text)
+(db/reset-first-text)
 
 (def uuid (.toString (UUID/randomUUID)))
 
@@ -24,7 +24,7 @@
                  (if-not (= uuid (get x :last-updater))
                    (let [new-state (s/make-state user x)]
                      (swap! *state (fn [old-state] (with-meta new-state (meta old-state)))))
-                   (pp "do not reset state"))))
+                   #_(pp "do not reset state"))))
 
 (defn swap!! [f & args]
   (let [v (apply swap! *state f args)]

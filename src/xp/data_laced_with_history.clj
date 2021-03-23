@@ -1,5 +1,5 @@
 (ns xp.data-laced-with-history
-  (:refer-clojure :exclude [isa atom])
+  (:refer-clojure :exclude [isa atom tree-seq])
   (:require [xp.vec :as vec]))
 
 (def about

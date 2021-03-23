@@ -6,27 +6,22 @@
 
 (do :transitions
 
-    (defn tree-seq_first-visible [ts]
-      (ffirst (drop-while (fn [[_ _ v]] (not v)) ts)))
-
-    (defn tree-seq_next-site [ts]
-      (last (sort (map ffirst ts))))
-
     (defn tree-seq_next-timestamp [ts]
       (inc (or (last (sort (map (comp second first) ts))) 0)))
 
     (defn make-state [user-ref {:as text :keys [tree members]}]
       (let [ts (d/tree-seq tree)
-            {:keys [color id position]} (first (filter #(= user-ref (:user %)) members))]
+            current-user? #(= user-ref (:user %))
+            {:keys [color id position]} (first (filter current-user? members))]
         (db/with-ref
          (db/data->ref text)
          {:user      user-ref
           :tree      tree
           :position  position
           :color     color
-          :site-id   id
+          :member-id   id
           :timestamp (tree-seq_next-timestamp ts)
-          :members members})))
+          :members (remove current-user? members)})))
 
     (defn adjacent-positions
       [{:as state :keys [tree position]}]
@@ -51,8 +46,8 @@
       (assoc state :position (or (:prev (adjacent-positions state))
                                  position)))
 
-    (defn insert-text [{:as state :keys [position site-id timestamp]} t]
-      (let [nxt-pos [site-id timestamp]
+    (defn insert-text [{:as state :keys [position member-id timestamp]} t]
+      (let [nxt-pos [member-id timestamp]
             operation [nxt-pos position [:ins t]]]
         (-> state
             (update :timestamp inc)
@@ -60,9 +55,9 @@
             (update :tree d/insert operation)
             (vary-meta update :local-changes (fnil conj []) operation))))
 
-    (defn delete-char [{:as state :keys [position site-id timestamp]}]
+    (defn delete-char [{:as state :keys [position member-id timestamp]}]
       (when-not (= [0 0] position)
-        (let [operation [[site-id timestamp] position [:del]]]
+        (let [operation [[member-id timestamp] position [:del]]]
           (-> state
               prev-position
               (update :tree d/insert operation)
