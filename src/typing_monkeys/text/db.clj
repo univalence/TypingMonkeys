@@ -4,13 +4,21 @@
             [typing-monkeys.utils.firestore :as fu]
             [manifold.stream :as st]
             [typing-monkeys.utils.misc :as u :refer [pp]]
-            [typing-monkeys.utils.walk :as walk]))
+            [typing-monkeys.utils.walk :as walk]
+            [xp.data-laced-with-history :as d]))
+
+(defn tree_syncable [t]
+  (walk/postwalk-replace #(when (keyword? %) (name %))
+                         t))
 
 (defn user_ref->data [ref]
   (let [user-ref (f/pull-doc ref)]
     (db/with-ref ref
                  {:id     (f/id ref)
                   :pseudo (get user-ref "pseudo")})))
+
+(defn get-user [email]
+  (f/doc db (str "users/" email)))
 
 #_(instance? java.util.ArrayList x)
 
@@ -24,37 +32,73 @@
           (when-let [[verb & args] (and (map-entry? x) (= :op (key x)) (val x))]
             [:op (vec (cons (keyword verb) args))])))))
 
-(defn tree_ref->data [ref]
-  (let [tree (f/pull-doc ref)]
+(defn text-ref->data [ref]
+  (let [text (f/pull-doc ref)]
     (db/with-ref ref
-                 {:id      (f/id ref)
-                  :data    (tree_format-data (get tree "data"))
-                  :members (mapv user_ref->data (get tree "members"))})))
+                 {:id           (f/id ref)
+                  :last-updater (get text "last-updater")
+                  :tree         (tree_format-data (get text "tree"))
+                  :members      (mapv walk/keywordize-keys (get text "members"))})))
 
-(defn get-first-tree []
-  (tree_ref->data (f/doc db "crdt-strings/first")))
+(defn text-ref [id]
+  (f/doc db (str "crdt-strings/" id)))
 
+(defn get-text [id]
+  (text-ref->data (text-ref id)))
 
+(defn sync-state! [{:as text :keys [tree user position]} uuid]
+  #_(println "sync-state " (db/data->ref tree) tree)
+  (let [local-changes (pp "local-changes: " (-> text meta :local-changes))]
+    (f/update! (db/data->ref text)
+               (fn [x] (do ; pp "updating: "
+                         (-> x
+                             (assoc "last-updater" uuid)
+                             (update "tree" (fn [tree] (tree_syncable (reduce d/insert (tree_format-data tree) local-changes))))
+                             (update "members" (fn [members]
+                                                 (mapv (fn [member]
+                                                         #_(pp "updating-position " k member (db/data->ref (get member "user")))
+                                                         (if (= user (get member "user"))
+                                                           (assoc (into {} member) "position" position)
+                                                           member))
+                                                       members)))))))))
 
+(defn watch-text [id on-change]
+  (st/consume (fn [x]
+                #_(pp "tree changed: " x (f/ref x))
+                (on-change (text-ref->data (f/ref x))))
+              (f/->stream (text-ref id)
+                          {:plain-fn identity})))
 
 
 
 (comment
 
- (tree_ref->data (f/doc db "crdt-strings/first"))
+ (f/update! (f/doc db "scratch/foobar")
+            (fn [x] {"foo" "boz"}))
 
- (type (get-in (tree_ref->data (f/doc db "crdt-strings/first"))
-               [:data :children]))
+ (st/consume (fn [x]
+               (println "tchanged: " x))
+             (f/->stream (f/doc db "scratch/foobar")
+                         {:plain-fn identity}))
 
- (walk/keywordize-keys {"a" [{"b" :c}] "b" {"c" {"d" :m}}})
+ (watch-text "first" (partial pp "changed"))
+ (f/->stream (text-ref "first"))
 
- (walk/keywordize-keys (get (f/pull-doc (f/doc db "crdt-strings/first")) "data")))
+ (text-ref->data (f/doc db "crdt-strings/first")))
 
+(defn reset-first-text []
+  (let [kw->str (partial walk/postwalk-replace #(when (keyword? %) (name %)))]
+    (f/delete! (f/doc db "crdt-strings/first"))
+    (f/create! (f/doc db "crdt-strings/first")
+               (kw->str {:tree    d/zero #_(kw->str (reduce d/insert d/zero d/data))
+                         :members [{:user     (f/doc db "users/pierrebaille@gmail.com")
+                                    :id       1
+                                    :color    "lightskyblue"
+                                    :position [0 0]}
+                                   {:user     (f/doc db "users/francois@univalence.io")
+                                    :id       2
+                                    :color    "tomato"
+                                    :position [0 0]}]}))))
 (comment :first-tree-init
-         (require '[xp.data-laced-with-history :as d])
-         (f/create! (f/doc db "crdt-strings/first")
-                    {"members" [(f/doc db "users/pierrebaille@gmail.com")
-                                (f/doc db "users/francois@univalence.io")]
-                     "colors"  {"pierrebaille@gmail.com" "lightskyblue"
-                                "francois@univalence.io" "tomato"}
-                     "data"    (u/walk_keyword->string (reduce d/insert d/zero d/data))}))
+
+         )

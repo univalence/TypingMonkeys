@@ -8,7 +8,7 @@
   "check if an event is an auth event, returns its simple name as a keyword if so"
   [{:as event
     t   :event/type}]
-  (when (= "typing_monkeys.chat" (namespace t))
+  (when (= "typing-monkeys.chat" (namespace t))
     (keyword (name t))))
 
 (defn clear-input! [*state]

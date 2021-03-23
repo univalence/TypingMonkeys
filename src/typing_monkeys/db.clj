@@ -13,3 +13,16 @@
 
 (defn data->ref [x]
   (-> x meta :ref))
+
+;; user -------------------------------------------------
+
+(defn user-ref->data [ref]
+  (let [user-ref (f/pull-doc ref)]
+    (with-ref ref
+                 {:id     (f/id ref)
+                  :pseudo (get user-ref "pseudo")})))
+
+(defn get-user [email]
+  (-> (f/coll db "users")
+      (f/doc email)
+      user-ref->data))
