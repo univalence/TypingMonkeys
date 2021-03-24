@@ -16,6 +16,8 @@
      :showing true
      :width   200
      :height  200
+     :x 500
+     :y -1000
      :title   "Authentication"
      :scene   {:fx/type :scene
                :root    {:fx/type  :v-box

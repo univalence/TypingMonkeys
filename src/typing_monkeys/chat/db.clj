@@ -2,8 +2,7 @@
   (:require [firestore-clj.core :as f]
             [typing-monkeys.db :as db :refer [db]]
             [typing-monkeys.chat.data :as data]
-            [typing-monkeys.utils.walk :as walk]
-            [typing-monkeys.auth.data :as auth-data]))
+            [typing-monkeys.utils.walk :as walk]))
 
 
 (defn get-room [room-id]

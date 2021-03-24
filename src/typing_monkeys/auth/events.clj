@@ -1,11 +1,12 @@
 (ns typing-monkeys.auth.events
   (:require [cljfx.api :as fx]
-            [typing-monkeys.base :as b]
-            [typing-monkeys.auth.module :as m]
-            [typing-monkeys.utils.misc :refer [fk pp]]))
+            [cheshire.core :as cheschire]
+            [typing-monkeys
+             [base :as b]
+             [auth.module :as m]
+             [utils.misc :refer [fk pp]]]))
 
 (m/reg-events {:init          (fk [fx/context]
-                                  #_(println "init")
                                   {:fx/context (m/set context :email nil :password nil)})
 
                :logout        (fk [fx/context]
@@ -24,7 +25,8 @@
                                     {(m/key :sign-in) [email password]}))
 
                :signed-in     (fk [fx/context fx/event response]
-                                  {:fx/context (pp response (b/set context :signed-in true))})
+                                  (do (pp (cheschire/parse-string (:body response)))
+                                      {:fx/context (b/set context :signed-in true)}))
 
                :sign-in-error (fk [] ())})
 

@@ -20,24 +20,13 @@
 (defn get-user [email]
   (f/doc db (str "users/" email)))
 
-#_(instance? java.util.ArrayList x)
-
-(defn tree_format-data
-  [data]
-  (->> (into {} data) ;; sometimes data is an java.util.HashMap
-       (walk/keywordize-keys)
-       (walk/prewalk-replace
-        (fn [x]
-          ;; operations verbs will be turn into a keyword
-          (when-let [[verb & args] (and (map-entry? x) (= :op (key x)) (val x))]
-            [:op (vec (cons (keyword verb) args))])))))
 
 (defn text-ref->data [ref]
   (let [text (f/pull-doc ref)]
     (db/with-ref ref
                  {:id           (f/id ref)
                   :last-updater (get text "last-updater")
-                  :tree         (tree_format-data (get text "tree"))
+                  :tree         (read-string (get text "tree"))
                   :members      (mapv walk/keywordize-keys (get text "members"))})))
 
 (defn text-ref [id]
@@ -52,7 +41,7 @@
     (f/update! (db/data->ref text)
                (fn [x] (-> x
                            (assoc "last-updater" uuid)
-                           (update "tree" (fn [tree] (tree_syncable (reduce d/insert (tree_format-data tree) local-changes))))
+                           (update "tree" (fn [tree] (str (reduce d/insert (read-string tree) local-changes))))
                            (update "members" (fn [members]
                                                (mapv (fn [member]
                                                        (if (= user (get member "user"))
@@ -88,7 +77,7 @@
   (let [kw->str (partial walk/postwalk-replace #(when (keyword? %) (name %)))]
     (f/delete! (f/doc db "crdt-strings/first"))
     (f/create! (f/doc db "crdt-strings/first")
-               (kw->str {:tree    d/zero #_(kw->str (reduce d/insert d/zero d/data))
+               (kw->str {:tree    (str d/zero) #_(kw->str (reduce d/insert d/zero d/data))
                          :members [{:user     (f/doc db "users/pierrebaille@gmail.com")
                                     :id       1
                                     :color    "lightskyblue"
