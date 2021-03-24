@@ -28,8 +28,9 @@
 
 (defn swap!! [f & args]
   (let [v (apply swap! *state f args)]
-    (db/sync-state! v uuid)
-    (swap! *state vary-meta assoc :local-changes [])))
+    (future
+     (db/sync-state! v uuid)
+     (swap! *state vary-meta assoc :local-changes []))))
 
 (defn map-event-handler [event]
   (case (:event/type event)
