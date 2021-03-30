@@ -56,9 +56,10 @@
             (vary-meta update :local-changes (fnil conj []) operation))))
 
     (defn delete-char [{:as state :keys [position member-id timestamp]}]
-      (when-not (= [0 0] position)
+      (if (= [0 0] position)
+        state
         (let [operation [[member-id timestamp] position [:del]]]
-          (-> state
-              prev-position
+          (-> (prev-position state)
+              (update :timestamp inc)
               (update :tree d/insert operation)
               (vary-meta update :local-changes (fnil conj []) operation))))))

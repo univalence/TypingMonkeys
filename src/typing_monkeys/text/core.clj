@@ -33,6 +33,7 @@
      (swap! *state vary-meta assoc :local-changes []))))
 
 (defn map-event-handler [event]
+  #_(println "text event at position " (:position @*state))
   (case (:event/type event)
     :text.keypressed (condp = (.getCode ^KeyEvent (:fx/event event))
                        KeyCode/RIGHT (swap!! s/next-position)

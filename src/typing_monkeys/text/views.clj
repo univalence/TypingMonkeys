@@ -48,7 +48,7 @@
 (defn root
   [{:keys [tree position color members member-id user]}]
   (let [members (cons {:id member-id :position position :color color :user user} members)
-        position->color (into {} (map (juxt :position :color) members))
+        position->color (into {} (map (juxt :position :color) (reverse members)))
         cells (cons [[0 0] "" true] (d/tree-seq tree))
         visible-cells (filter (fn [c] (nth c 2)) cells)
         colored-cells (mapv (fn [c] (conj c (position->color (first c)))) visible-cells)]

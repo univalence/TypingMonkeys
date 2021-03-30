@@ -45,7 +45,7 @@
 
 (defn room_add-message! [room message]
   (f/add! (f/coll db (str "rooms/" (:id room) "/messages"))
-          (walk/stringify-keys (update message :user db/data->ref))))
+          (walk/stringify-keys (update message :from db/data->ref))))
 
 
 

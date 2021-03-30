@@ -1,8 +1,5 @@
 (ns typing-monkeys.chat.view)
 
-(defn event [k]
-  (keyword "typing-monkeys.chat" (name k)))
-
 (defn message [{:keys [content from]}]
   #_(println "render message" content from)
   {:fx/type  :h-box
@@ -23,14 +20,12 @@
    :children [{:fx/type    :button
                :text       room-id
                :pref-width 300
-               :on-action  {:event/type (event :swap-room)
+               :on-action  {:event/type :chat.swap-room
                             :room-id    room-id}}]})
 
-(defn chat [{:as                        state
-             user                       :user
-             {:keys [room input rooms]} :chat}]
+(defn root [{:as s :keys [room input rooms pseudo]}]
 
-  #_(println "render typing_monkeys.chat ")
+  #_(println "chat " s)
   #_(println (user-data user))
   #_(println (room-data room))
 
@@ -52,12 +47,12 @@
    :children           [{:fx/type          :label
                          :pref-width       200
                          :grid-pane/column 1
-                         :text             (str "Current user: " (:pseudo user))}
+                         :text             (str "Current user: " pseudo)}
 
                         {:fx/type    :button
                          :text       "logout"
                          :pref-width 100
-                         :on-action  {:event/type (event :logout)}}
+                         :on-action  {:event/type :chat.logout}}
 
                         {:fx/type       :scroll-pane
                          :grid-pane/row 1
@@ -85,8 +80,8 @@
                                              :v-box/margin    5
                                              :text            input
                                              :prompt-text     "Write message and press ENTER"
-                                             :on-text-changed {:event/type (event :type)}
-                                             :on-key-pressed  {:event/type (event :send)}}]}]})
+                                             :on-text-changed {:event/type :chat.type}
+                                             :on-key-pressed  {:event/type :chat.send}}]}]})
 
 
 
