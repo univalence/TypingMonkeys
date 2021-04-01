@@ -45,12 +45,16 @@
         visible-cells (filter (fn [c] (nth c 2)) cells)
         colored-cells (mapv (fn [c] (conj c (position->color (first c)))) visible-cells)]
 
-    {:left   {:fx/type       :scroll-pane
-              :content       {:fx/type  :v-box
-                              :padding 5
-                              :spacing 5
-                              :children (mapv (fn [x] {:fx/type :button :text x :pref-width 150 :on-action {:event/type :text.switch :id x}}) text-ids)}}
-     :center {:on-key-pressed {:event/type :text.keypressed}
-              :fx/type        :v-box
-              :children       [(flow-pane (mapv member members))
-                               (flow-pane (mapv cell colored-cells))]}}))
+    {:left   {:fx/type :scroll-pane
+              :content {:fx/type  :v-box
+                        :padding  5
+                        :spacing  5
+                        :children (mapv (fn [x] {:fx/type :button :text x :pref-width 150 :on-action {:event/type :text.switch :id x}})
+                                        text-ids)}}
+     :center {:fx/type      :scroll-pane
+              :pref-height  2000
+              :fit-to-width true
+              :content      {:fx/type        :v-box
+                             :on-key-pressed {:event/type :text.keypressed}
+                             :children       [(flow-pane (mapv member members))
+                                              (flow-pane (mapv cell colored-cells))]}}}))

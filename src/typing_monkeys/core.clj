@@ -23,7 +23,7 @@
     (swap! *state assoc :user user)))
 
 (defmethod handler :module-switch [{:keys [id fx/event]}]
-  (println "modswitch " (or id (keyword event)))
+  #_(println "modswitch " (or id (keyword event)))
   (swap! *state assoc :module (or id (keyword event))))
 
 (defn current-module [{:as state :keys [module chat text]}]
@@ -75,6 +75,7 @@
    :opts {:fx.opt/map-event-handler handler}))
 
 (reset-state!)
+
 (def mounted-render (fx/mount-renderer *state renderer))
 
 #_(renderer)

@@ -93,12 +93,11 @@
 
 
     (defn field-pattern [xs]
-      (pp 'fpat xs
-          (let [xs (mapv (comp keyword name) xs)]
-            (if (= :& (-> xs butlast last))
-              {:fields   (-> xs butlast butlast vec)
-               :variadic (last xs)}
-              {:fields xs}))))
+      (let [xs (mapv (comp keyword name) xs)]
+        (if (= :& (-> xs butlast last))
+          {:fields   (-> xs butlast butlast vec)
+           :variadic (last xs)}
+          {:fields xs})))
 
 
 
