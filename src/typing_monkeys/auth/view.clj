@@ -1,4 +1,4 @@
-(ns typing-monkeys.auth2.view)
+(ns typing-monkeys.auth.view)
 
 (defn login [{:keys [email password]}]
   {:fx/type :stage

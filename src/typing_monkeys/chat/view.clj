@@ -19,9 +19,38 @@
    :padding  5
    :children [{:fx/type    :button
                :text       room-id
-               :pref-width 300
+               :pref-width 150
                :on-action  {:event/type :chat.swap-room
                             :room-id    room-id}}]})
+
+(defn root2 [{:as s :keys [room input rooms pseudo]}]
+
+  #_(println "chat " s)
+  #_(println (user-data user))
+  #_(println (room-data room))
+
+  {:left {:fx/type       :scroll-pane
+          ;; :fit-to-width  true
+          :content       {:fx/type  :v-box
+                          :children (mapv room-btn rooms)}}
+
+   :center {:fx/type          :v-box
+            ;; :pref-width       300
+            ;; :pref-height      400
+
+            :children         [{:fx/type      :scroll-pane
+                                :pref-height  2000
+                                :fit-to-width true
+                                :content      {:fx/type  :v-box
+                                               :children (mapv message
+                                                               (sort-by :timestamp (:messages room)))}} ;; print all messages
+
+                               {:fx/type         :text-field
+                                :v-box/margin    5
+                                :text            input
+                                :prompt-text     "Write message and press ENTER"
+                                :on-text-changed {:event/type :chat.type}
+                                :on-key-pressed  {:event/type :chat.send}}]}})
 
 (defn root [{:as s :keys [room input rooms pseudo]}]
 

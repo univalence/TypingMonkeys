@@ -1,5 +1,5 @@
 (ns typing-monkeys.chat.handler
-  (:require [typing-monkeys.base2 :refer [handler *state]]
+  (:require [typing-monkeys.base :refer [handler *state]]
             [typing-monkeys.chat.db :as db]
             [typing-monkeys.chat.data :as data]
             [manifold.stream :as st])
@@ -70,7 +70,7 @@
     (handler {:event/type :chat.watch-room :id id})
     (swap! *state
            (fn [state]
-             (-> state
+             (-> (assoc state :module :chat)
                  (assoc-in [:chat :rooms] ids)
                  (assoc-in [:chat :room] room)
                  (assoc-in [:chat :pseudo] (:pseudo user)))))

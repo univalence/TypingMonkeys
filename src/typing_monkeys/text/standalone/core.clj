@@ -1,4 +1,4 @@
-(ns typing-monkeys.text.core
+(ns typing-monkeys.standalone.text.core
   (:require [cljfx.api :as fx]
             [typing-monkeys.text.state :as s]
             [typing-monkeys.text.db :as db]

@@ -1,4 +1,5 @@
-(ns typing-monkeys.utils.misc
+
+(ns monk.utils
   (:refer-clojure :exclude [key get set])
   (:require [clojure.walk :as walk]
             [clojure.string :as string]))
@@ -24,7 +25,10 @@
 (do :log-debug
 
     (defn pp [& xs]
-      (mapv clojure.pprint/pprint xs) (last xs)))
+      (mapv clojure.pprint/pprint xs) (last xs))
+
+    (defmacro ppx [x]
+      `(pp (macroexpand-1 '~x))))
 
 (do :fn-syntax
 
@@ -51,6 +55,15 @@
              (def ~name* (partial apply ~name))
              (defn ~name_ [& xs#] #(~name* % xs#))
              (def ~name_* (partial apply ~name_)))))
+
+    (defmacro import-defn+ [sym]
+      (let [n (symbol (name sym))
+            ns' (namespace sym)
+            qualified-sym (fn [postfix] (symbol ns' (name (mksym n postfix))))]
+        `(do (def ~n ~sym)
+             (def ~(mksym n "_") ~(qualified-sym "_"))
+             (def ~(mksym n "*") ~(qualified-sym "*"))
+             (def ~(mksym n "_*") ~(qualified-sym "_*")))))
 
     (defn parse-fn [[fst & nxt :as all]]
 

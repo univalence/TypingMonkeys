@@ -1,5 +1,5 @@
-(ns typing-monkeys.auth2.events
-  (:require [typing-monkeys.base2 :refer [handler *state]]
+(ns typing-monkeys.auth.handler
+  (:require [typing-monkeys.base :refer [handler *state]]
             [clj-http.client :as http]))
 
 (defmethod handler :auth.logout
