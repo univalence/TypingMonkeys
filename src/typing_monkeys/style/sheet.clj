@@ -3,6 +3,7 @@
 
 (def main
   (stylesheet ::main
+              ".label-right" {:text-alignment :right}
               #_#_#_#_".button"
               {:text-fill        :gray
                :font-family      :monospace

@@ -1,7 +1,11 @@
-(ns typing-monkeys.base)
+(ns typing-monkeys.base
+  (:import (java.util UUID)))
+
+(def client-id
+  (.toString (UUID/randomUUID)))
 
 (def initial-state
-  {:module :chat
+  {:module :user
    :auth {:email "pierrebaille@gmail.com"
           :password "password"}})
 

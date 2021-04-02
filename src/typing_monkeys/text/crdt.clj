@@ -1,6 +1,6 @@
 (ns typing-monkeys.text.crdt
   (:refer-clojure :exclude [isa atom tree-seq])
-  (:require [utils.vec :as vec]))
+  (:require [monk.vec :as vec]))
 
 (def about
   {:article-url "http://archagon.net/blog/2018/03/24/data-laced-with-history/"
@@ -50,7 +50,7 @@
 
 (def zero (tree [0 0] [:nop] []))
 
-(defn tree_insert-children
+(defn tree_insert-child-event
   [n [eid _ data]]
   (let [child (tree eid data [])]
     (update n
@@ -64,7 +64,7 @@
 (defn insert [{:as tree :keys [id children]}
               [_ pid _ :as event]]
   (if (= id pid)
-    (tree_insert-children tree event)
+    (tree_insert-child-event tree event)
     (when-not (empty? children)
       (loop [[c1 & cs] children done []]
         (if-let [child (insert c1 event)]
@@ -93,14 +93,69 @@
 (defn tree->str [t]
   (-> t tree-seq tree-seq->str))
 
-(let [tree (reduce insert zero data)]
-  (tree-seq tree)
-  (tree->str tree))
-
 (defn last-id [{:as tree :keys [id children]}]
   (if-let [cs (seq children)]
     (last (sort-by second (map last-id cs)))
     id))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(defn tree_insert-child
+  [n {:as child :keys [id]}]
+  (update n
+          :children
+          (fn [xs]
+            (if (empty? xs)
+              [child]
+              (let [idx (count (take-while (fn [c] (neg? (compare (:id c) id))) xs))]
+                (vec/insert xs idx child))))))
+
+(defn tree_remove-child [tree child-id]
+  (update tree :children (fn [cs] (vec (remove #(= (:id %) child-id) cs)))))
+
+(defn delete-node? [node]
+  (= (:op node) [:del]))
+
+(defn deletable-node [{:as tree :keys [id children]} limit]
+  (and (if-not limit true (<= (second id) limit))
+       (some delete-node? children)))
+
+(defn mark-deleted [tree limit]
+  (update (if (deletable-node tree limit)
+            (assoc tree :deleted true)
+            tree)
+          :children
+          (partial mapv #(mark-deleted % limit))))
+
+(defn pop-deleted [tree]
+  (let [children (mapv pop-deleted (:children tree))
+        deleted-children (mapcat :children (filter :deleted children))
+        children (vec (remove :deleted children))]
+    (reduce tree_insert-child
+            (assoc tree :children children)
+            (remove delete-node? deleted-children))))
+
+(defn compress [tree & [limit]]
+  (pop-deleted (mark-deleted tree limit)))
+
+
+
+
 
 
 
@@ -122,5 +177,31 @@
     [[3 9] [3 8] [:ins :t]]
     [[1 10] [1 9] [:ins :l]]])
 
- (tree-seq (reduce insert zero data)))
+ (let [tree (reduce insert zero data)]
+   (tree-seq tree)
+   (tree->str tree))
+
+ (tree-seq (reduce insert zero data))
+
+ (def tree2 {:id       [0 0], :op [:nop],
+             :children [{:id       [1 2], :op [:ins "a"],
+                         :children [{:id       [1 3], :op [:ins "z"],
+                                     :children [{:id       [1 4], :op [:ins "e"],
+                                                 :children [{:id       [1 5], :op [:ins "r"],
+                                                             :children [{:id       [1 6], :op [:ins "t"],
+                                                                         :children [{:id       [1 7], :op [:ins "y"],
+                                                                                     :children []}]}
+                                                                        {:id       [1 8], :op [:del],
+                                                                         :children []}]}]} {:id       [1 9], :op [:del],
+                                                                                            :children []}]}]}]})
+ (def tree3 {:id       [0 0], :op [:nop],
+             :children [{:id       [1 2], :op [:ins "a"],
+                         :children [{:id       [1 3], :op [:ins "z"],
+                                     :children [{:id       [1 4], :op [:ins "e"],
+                                                 :children [{:id       [1 5], :op [:del],
+                                                             :children []}]}
+                                                {:id       [1 6], :op [:del],
+                                                 :children []}]}]}]})
+ (pp tree2 (compress tree2))
+ (pp tree3 (compress tree3)))
 

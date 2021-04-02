@@ -1,7 +1,6 @@
 (ns typing-monkeys.chat.handler
   (:require [typing-monkeys.base :refer [handler *state]]
             [typing-monkeys.chat.db :as db]
-            [typing-monkeys.chat.data :as data]
             [manifold.stream :as st])
   (:import [javafx.scene.input KeyCode KeyEvent]))
 
@@ -39,7 +38,7 @@
 (defn post-message! []
   (let [{user                 :user
          {:keys [input room]} :chat} @*state
-        msg (data/message user input)]
+        msg (db/message user input)]
     #_(println "posting message " msg)
     (swap! *state update-in [:chat :room :messages] conj msg)
     (db/room_add-message! room msg)
@@ -70,7 +69,7 @@
     (handler {:event/type :chat.watch-room :id id})
     (swap! *state
            (fn [state]
-             (-> (assoc state :module :chat)
+             (-> state
                  (assoc-in [:chat :rooms] ids)
                  (assoc-in [:chat :room] room)
                  (assoc-in [:chat :pseudo] (:pseudo user)))))

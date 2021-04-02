@@ -20,6 +20,11 @@
   (f/->stream (f/doc db (str "rooms/" id))
               {:plain-fn (comp data/room-ref->data f/ref)}))
 
+(defn message [user content]
+  {:content   content
+   :from      user
+   :timestamp (System/nanoTime)})
+
 (defn message-stream [room-id]
   (f/->stream (f/coll db (str "rooms/" room-id "/messages"))
               {:plain-fn (fn [x] (mapv (comp data/message-ref->data f/ref) x))}))

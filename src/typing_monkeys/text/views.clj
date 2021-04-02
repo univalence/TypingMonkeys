@@ -52,6 +52,7 @@
                         :children (mapv (fn [x] {:fx/type :button :text x :pref-width 150 :on-action {:event/type :text.switch :id x}})
                                         text-ids)}}
      :center {:fx/type      :scroll-pane
+              :on-key-pressed {:event/type :text.keypressed}
               :pref-height  2000
               :fit-to-width true
               :content      {:fx/type        :v-box

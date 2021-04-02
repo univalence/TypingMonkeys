@@ -178,8 +178,28 @@
        (when-let [[x' y' z'] (comb-a1 x y z)]
          (comb x' y' z')))))
 
-(extend )
 
 
+(definterface Igreet (greet []))
 
+(defm foo [x]
+      Igreet (.greet x)
+      :vec (mapv foo x)
+      x)
+
+(defmacro deftup [name pat & impls]
+  (let [argv (mapv (fn [i] (u/mksym "arg_" (str (inc i))))
+                   (range (count pat)))]
+    `(defn ~name ~argv
+       (let ~(vec (interleave pat argv))
+         (i ~argv
+            ~@(map (fn [[n p & bod]] (list* n (vec/cat [pat] p) bod)) impls))))))
+
+(deftup pair [l r]
+        (get [x] (case x :l l :r r)))
+
+(get (pair 1 2) :l)
+
+(time (dotimes [_ 100000] (pair 1 2)))
+(time (dotimes [_ 100000] (vector 1 2)))
 

@@ -1,11 +1,13 @@
 (ns typing-monkeys.core
   (:require [cljfx.api :as fx]
             [typing-monkeys.base :refer [*state handler reset-state!]]
+            [typing-monkeys.user.handler]
+            [typing-monkeys.user.views :as user-views]
             [typing-monkeys.auth.handler]
             [typing-monkeys.auth.view :as auth-view]
             [typing-monkeys.text.handler]
             [typing-monkeys.text.views :as text-views]
-            [typing-monkeys.chat.handler :as chat-handler]
+            [typing-monkeys.chat.handler]
             [typing-monkeys.chat.view :as chat-view]
             [typing-monkeys.db :as db]
             [typing-monkeys.utils.firestore :as fi]
@@ -13,23 +15,18 @@
 
 (fi/overide-print-methods)
 
-(def MODULES ["chat" "text"])
+(def MODULES ["chat" "text" "user"])
 
-(defmethod handler :signed-in [{:keys [email]}]
-  (println "signed-in " email)
-  (let [user (db/get-user email)]
-    (handler {:event/type :text.init :user user})
-    (handler {:event/type :chat.init :user user})
-    (swap! *state assoc :user user)))
-
-(defmethod handler :module-switch [{:keys [id fx/event]}]
-  #_(println "modswitch " (or id (keyword event)))
+(defmethod handler :module-switch
+  [{:keys [id fx/event]}]
   (swap! *state assoc :module (or id (keyword event))))
 
-(defn current-module [{:as state :keys [module chat text]}]
+(defn current-module
+  [{:as state :keys [module chat text user]}]
   (case module
     :chat (chat-view/root2 chat)
-    :text (text-views/root text)))
+    :text (text-views/root text)
+    :user (user-views/editor user)))
 
 (defn topbar [{:as state :keys [user module]}]
 
@@ -58,7 +55,6 @@
    :height  540
    :scene   {:fx/type        :scene
              :stylesheets    [(:cljfx.css/url stylesheet/main)]
-             :on-key-pressed {:event/type :text.keypressed}
              :root           (merge {:fx/type     :border-pane
                                      :style-class "root"
                                      :top         (topbar state)}

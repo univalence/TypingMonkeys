@@ -65,6 +65,15 @@
 
          )
 
+(do :misc
+
+    (defn color->hex [c]
+      (format "#%02X%02X%02X"
+              (int (* 255 (.getRed c)))
+              (int (* 255 (.getGreen c)))
+              (int (* 255 (.getBlue c)))))
+    )
+
 (do :defc
 
 
@@ -166,3 +175,189 @@
 
 
 
+(do :constants
+    (def builtins
+      [;; cameras
+       :parallel-camera
+       :perspective-camera
+       ;; charts
+       :category-axis
+       :number-axis
+       :pie-chart-data
+       :xy-chart-data
+       :xy-chart-series
+       :pie-chart
+       :area-chart
+       :bar-chart
+       :bubble-chart
+       :line-chart
+       :scatter-chart
+       :stacked-area-chart
+       :stacked-bar-chart
+       ;; effects
+       :blend
+       :bloom
+       :box-blur
+       :color-adjust
+       :color-input
+       :displacement-map
+       :drop-shadow
+       :gaussian-blur
+       :glow
+       :image-input
+       :inner-shadow
+       :lighting
+       :light-distant
+       :light-point
+       :light-spot
+       :motion-blur
+       :perspective-transform
+       :reflection
+       :sepia-tone
+       :shadow
+       ;; scene
+       :image-view
+       :canvas
+       :group
+       :sub-scene
+       :region
+       :scene
+       :stage
+       ;; web
+       :html-editor
+       :web-view
+       ;; media
+       :media
+       :media-player
+       :media-view
+       ;; panes
+       :pane
+       :anchor-pane
+       :border-pane
+       :flow-pane
+       :grid-pane
+       :row-constraints
+       :column-constraints
+       :h-box
+       :stack-pane
+       :text-flow
+       :tile-pane
+       :v-box
+       ;; shapes
+       :arc
+       :circle
+       :cubic-curve
+       :ellipse
+       :line
+       :path
+       :arc-to
+       :close-path
+       :cubic-curve-to
+       :h-line-to
+       :line-to
+       :move-to
+       :quad-curve-to
+       :v-line-to
+       :polygon
+       :polyline
+       :quad-curve
+       :rectangle
+       :svg-path
+       :text
+       ;; transform
+       :affine
+       :rotate
+       :scale
+       :shear
+       :translate
+       ;; 3d shapes
+       :box
+       :cylinder
+       :mesh-view
+       :triangle-mesh
+       :sphere
+       :ambient-light
+       :point-light
+       :phong-material
+       ;; controls
+       :popup
+       :popup-control
+       :context-menu
+       :menu-item
+       :check-menu-item
+       :custom-menu-item
+       :menu
+       :radio-menu-item
+       :tooltip
+       :titled-pane
+       :accordion
+       :button-bar
+       :choice-box
+       :color-picker
+       :combo-box
+       :date-picker
+       :button
+       :check-box
+       :hyperlink
+       :menu-button
+       :split-menu-button
+       :toggle-button
+       :toggle-group
+       :radio-button
+       :label
+       :list-view
+       :menu-bar
+       :pagination
+       :progress-indicator
+       :progress-bar
+       :scroll-bar
+       :scroll-pane
+       :separator
+       :slider
+       :spinner
+       :integer-spinner-value-factory
+       :double-spinner-value-factory
+       :list-spinner-value-factory
+       :split-pane
+       :table-view
+       :table-column
+       :tab-pane
+       :tab
+       :text-area
+       :text-field
+       :text-formatter
+       :password-field
+       :tool-bar
+       :tree-table-view
+       :tree-item
+       :tree-table-column
+       :tree-view
+       ;; cells
+       :cell
+       :date-cell
+       :indexed-cell
+       :list-cell
+       :combo-box-list-cell
+       :text-field-list-cell
+       :table-cell
+       :table-row
+       :tree-cell
+       :tree-table-cell
+       :tree-table-row
+       ;; dialogs
+       :alert
+       :choice-dialog
+       :dialog
+       :dialog-pane
+       :text-input-dialog
+       ;; transitions
+       :fade-transition
+       :fill-transition
+       :parallel-transition
+       :path-transition
+       :pause-transition
+       :rotate-transition
+       :scale-transition
+       :sequential-transition
+       :stroke-transition
+       :translate-transition]))

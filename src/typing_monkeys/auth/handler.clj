@@ -23,5 +23,5 @@
       :method       :post
       :url          "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyDHvzDmWh7QIGx8UGLKHMdPH7JAWzNghus"
       :form-params  {:email email :password password :returnSecureToken true}}
-     (fn [res] (handler {:event/type :signed-in :email email :response res}))
-     (fn [err] (handler {:event/type :sign-in-error :error err})))))
+     (fn [res] (handler {:event/type :user.signed-in :email email :response res}))
+     (fn [err] (handler {:event/type :auth.sign-in-error :error err})))))

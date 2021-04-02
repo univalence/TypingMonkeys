@@ -115,6 +115,7 @@
   {:fx/type     :v-box
    :style-class "notification"
    :children    [(merge {:fx/type :label
+                         :style {:-fx-text-alignment :right}
                          :text    text}
                         (when variant {:style-class variant}))]})
 
@@ -164,3 +165,5 @@
 
 #_(pp @*state)
 #_(renderer {:fx/type root})
+
+

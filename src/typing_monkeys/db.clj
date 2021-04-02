@@ -5,8 +5,7 @@
 
 (fu/overide-print-methods)
 
-(defonce db (f/client-with-creds
-             "data/unsafe.json"))
+(defonce db (f/client-with-creds "data/unsafe.json"))
 
 (defn with-ref [ref data]
   (vary-meta data assoc :ref ref))
@@ -16,13 +15,13 @@
 
 ;; user -------------------------------------------------
 
-(defn user-ref->data [ref]
+#_(defn user-ref->data [ref]
   (let [user (f/pull-doc ref)]
     (with-ref ref
               {:id     (f/id ref)
                :pseudo (get user "pseudo")})))
 
-(defn get-user [email]
+#_(defn get-user [email]
   (-> (f/coll db "users")
       (f/doc email)
       user-ref->data))

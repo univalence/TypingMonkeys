@@ -1,18 +1,14 @@
 (ns typing-monkeys.chat.data
   (:require [typing-monkeys.db :as db]
+            [typing-monkeys.user.db :as user]
             [firestore-clj.core :as f]))
-
-(defn message [user content]
-  {:content   content
-   :from      user
-   :timestamp (System/nanoTime)})
 
 (defn message-ref->data [ref]
   (let [message (f/pull-doc ref)]
     (db/with-ref ref
                  {:id        (f/id ref)
                   :content   (get message "content")
-                  :from      (db/user-ref->data (get message "from"))
+                  :from      (user/user-ref->data (get message "from"))
                   :timestamp (get message "timestamp")})))
 
 (defn room-ref->data [ref]
@@ -22,4 +18,4 @@
     (db/with-ref ref
                  {:id       (f/id ref)
                   :messages (db/with-ref message-ref (mapv message-ref->data (f/docs message-ref)))
-                  :members  (mapv db/user-ref->data members-ref)})))
+                  :members  (mapv user/user-ref->data members-ref)})))
