@@ -6,8 +6,10 @@
 (def *state (atom {}))
 
 (defn execute []
-  (swap! *state (fn [state]
-                  (assoc state :out (pr-str (apply sh (str/split (:text state) #" ")))))))
+  (swap! *state
+         (fn [state]
+                  (assoc state :out (str (get (apply sh (str/split (:text state) #" ")) :out ))))
+         ))
 
 (defn handler [{:keys [id fx/event]}]
   (swap! *state assoc :module (or id (keyword event))))
@@ -20,18 +22,19 @@
 
 (defn root [state] {:fx/type :stage
                     :showing true
-                    :width   200
+                    :width   600
                     :height  200
                     :scene   {:fx/type :scene
                               :root    {:fx/type  :v-box
-                                        :children [{:fx/type         :text-field
-                                                    :on-text-changed {:event/type :capture-text}}
-                                                   {:fx/type    :button
-                                                    :text       "ENTER"
-                                                    :pref-width 30
-                                                    :on-action  {:event/type :execute}}
-                                                   {:fx/type :text
-                                                    :text    (get state :out)}]}}})
+                                        :children [{:fx/type :text
+                                                    :text    (get state :out)}
+                                                   {:fx/type  :h-box
+                                                    :children [{:fx/type         :text-field
+                                                                :on-text-changed {:event/type :capture-text}}
+                                                               {:fx/type    :button
+                                                                :text       "ENTER"
+                                                                :pref-width 100
+                                                                :on-action  {:event/type :execute}}]}]}}})
 
 
 (fx/mount-renderer
