@@ -37,3 +37,4 @@
                    {:fx/type         :text-area
                     :text            description
                     :on-text-changed {:event/type :user.assoc :keys :description}}))})
+

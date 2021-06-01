@@ -1,0 +1,21 @@
+{:builds
+   {:typing-monkeys.components.codemirror
+      {:asset-path ".",
+       :build-hooks [(shadow-cljfx.repl/release-hook
+                       :typing-monkeys.components.codemirror)],
+       :cljfx true,
+       :modules {:main {:init-fn
+                          typing-monkeys.components.codemirror.view/init}},
+       :output-dir "target/typing_monkeys/components/codemirror",
+       :target :browser},
+    :typing-monkeys.components.monaco
+      {:asset-path ".",
+       :build-hooks [(shadow-cljfx.repl/release-hook
+                       :typing-monkeys.components.monaco)],
+       :cljfx true,
+       :modules {:main {:init-fn typing-monkeys.components.monaco.view/init}},
+       :output-dir "target/typing_monkeys/components/monaco",
+       :target :browser}},
+ :deps true,
+ :dev-http {8080 "target/"},
+ :nrepl {:port 8777}}

@@ -20,3 +20,6 @@
   (println "set user " data)
   (f/set! (db/data->ref data)
           (walk/stringify-keys data)))
+
+(defn get-user-ids []
+  (mapv f/id (f/docs (f/coll db "users"))))

@@ -95,7 +95,3 @@
              (comp (link->trans (at p g)) f))
            (link->trans (at x y))
            (partition 2 zs))))
-
-
-
-

@@ -5,7 +5,7 @@
   (.toString (UUID/randomUUID)))
 
 (def initial-state
-  {:module :user
+  {:module :text
    :auth {:email "pierrebaille@gmail.com"
           :password "password"}})
 
