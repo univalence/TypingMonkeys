@@ -74,4 +74,4 @@
 
 (def mounted-render (fx/mount-renderer *state renderer))
 
-#_(renderer)
+(renderer)
