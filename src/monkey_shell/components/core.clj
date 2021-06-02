@@ -21,22 +21,27 @@
    :fit-to-width true
    :content      {:fx/type  :v-box
                   :children [{:fx/type :text
-                              :text    (-> (get state :history)
+                              :text    (-> (get-in state [:histories (keyword (get-in state [:shell-session :id]))])
                                            first
                                            :result
                                            :out
                                            str)}]}})
 
+(defn squared-btn
+  "squared button that return its name on click"
+  [session-id on-action-event-keyword]
+  {:fx/type  :h-box
+   :spacing  5
+   :padding  5
+   :children [{:fx/type    :button
+               :text       session-id
+               :pref-width 150
+               :on-action  {:event/type on-action-event-keyword
+                            :session-id session-id}}]})
+
 (defn sidebar
   "Menu-like component (list of buttons)"
-  [on-action-event-keyword]
+  [on-action-event-keyword btn-list]
   {:fx/type  :v-box
-   :children [{:fx/type    :button
-               :text       "btn"
-               :pref-width 150
-               :on-action  {:event/type on-action-event-keyword}}
-              {:fx/type    :button
-               :text       "btn2"
-               :pref-width 150
-               :on-action  {:event/type on-action-event-keyword}}
-              ]})
+   :children (mapv #(squared-btn % on-action-event-keyword) btn-list)})
+
