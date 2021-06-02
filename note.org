@@ -1,0 +1,10 @@
+#+TITLE: Note
+#+DESCRIPTION: testing orgmod in doom
+
+* one
+** pouet
+ieorp
+* two
+* insert
+** nested
+** third

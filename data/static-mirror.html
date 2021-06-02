@@ -1,0 +1,11 @@
+<!doctype html><html><head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/codemirror.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/theme/3024-day.min.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/codemirror.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/mode/clojure/clojure.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/keymap/sublime.min.js"></script></head>
+<body><button id="alert-button" onclick="alert("clicked")">alert</button><textarea id="code" name="code">(defn script [href]
+  (str "<script src=\"" href "\"></script>"))</textarea>
+<script>
+        var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+          lineNumbers: true,
+          matchBrackets: true,
+          mode: "clojure"
+          });
+       </script></body></html>
