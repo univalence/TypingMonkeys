@@ -53,8 +53,6 @@
           (walk/stringify-keys (update message :from db/data->ref))))
 
 
-
-
 (comment :scratch
 
          (do

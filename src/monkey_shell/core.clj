@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [firestore-clj.core :as f]
             [clojure.walk :as walk]
-            [clojure.java.shell :as shell]))
+            [clojure.java.shell :as shell]
+            [monkey-shell.components.core :as ui]))
 
 (def *state (atom {:history       ()
                    :shell-session {:id "first-shell"}}))
@@ -54,13 +55,9 @@
                                                                  :result
                                                                  :out
                                                                  str)}
-                                                   {:fx/type  :h-box
-                                                    :children [{:fx/type         :text-field
-                                                                :on-text-changed {:event/type :capture-text}}
-                                                               {:fx/type    :button
-                                                                :text       "ENTER"
-                                                                :pref-width 100
-                                                                :on-action  {:event/type :execute}}]}]}}})
+                                                   (ui/text-entry :capture-text :execute)]}}})
+
+
 
 (fx/mount-renderer
   *state
