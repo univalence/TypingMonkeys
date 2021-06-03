@@ -47,7 +47,7 @@
 
 (defn handler
   [event]
-  (println "handling: " (:event/type event))
+  (println "handling: " (:event/type event) (get event :click-payload))
   (case (:event/type event)
 
     :execute (execute!)
@@ -58,7 +58,7 @@
     (state/put! [:ui :session :input] (get event :fx/event))
 
     :ui.sidebar.click
-    (state/swap! state/with-focus (get event :click-payload))
+    (state/swap! state/with-focus (keyword (get event :click-payload)))
 
     ::ui.session.settings.open
     (state/put! [:ui :session :settings :window :showing] true)
