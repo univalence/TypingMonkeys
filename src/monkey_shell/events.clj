@@ -60,9 +60,9 @@
     :ui.sidebar.click
     (state/swap! state/with-focus (keyword (get event :click-payload)))
 
-    ::ui.session.settings.open
+    :ui.session.settings.open
     (state/put! [:ui :session :settings :window :showing] true)
-    ::ui.session.settings.close
+    :ui.session.settings.close
     (state/put! [:ui :session :settings :window :showing] false)
 
     :ui.session.set-new-id
