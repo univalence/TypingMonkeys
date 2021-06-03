@@ -8,7 +8,28 @@
                   [:shell-sessions (keyword (get-in state [:session :id]))
                    :members]) (repeat true)))
 
-(defn shell [state]
+
+
+
+(defn text-thread
+  "Chronologically ordered text.
+  ATM it only prints the last cmd stdout,
+  TODO print full history "
+  [state]
+  {:fx/type      :scroll-pane
+   :pref-width   400
+   :pref-height  400
+   :v-box/vgrow  :always
+   :fit-to-width true
+   :content      {:fx/type  :v-box
+                  :children [{:fx/type :text
+                              :text    (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
+                                           first
+                                           :result
+                                           :out
+                                           str)}]}})
+
+(defn session [state]
   {:fx/type :stage
    :showing true
    :width 600
@@ -21,13 +42,13 @@
                                                      (keys (walk/stringify-keys
                                                              (get state :shell-sessions))))
                                          {:fx/type :v-box
-                                          :children [(ui/text-thread state)
+                                          :children [(text-thread state)
                                                      (ui/text-entry :ui.session.set-input :execute)
                                                      (ui/squared-btn
                                                        (str (get-in state [:session :id]) "'s settings")
                                                        :ui.session.settings.open)]}]}]}}})
 
-(defn member-selection [state]
+(defn session-settings [state]
   (ui/window (get-in state [:ui.session.settings.window])
              (ui/vbox [(ui/radio-group (members->true state))
                        (ui/text-entry :ui.session.settings.set-new-id :add-member "Add member")
@@ -35,5 +56,5 @@
 
 
 (defn root [state]
-  (ui/many [(shell state)
-            (member-selection state)]))
+  (ui/many [(session state)
+            (session-settings state)]))
