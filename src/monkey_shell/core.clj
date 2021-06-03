@@ -13,4 +13,5 @@
     :opts {:fx.opt/map-event-handler events/handler}))
 
 (comment
+  (:ui (state/get))
   (ui/root (state/get)))

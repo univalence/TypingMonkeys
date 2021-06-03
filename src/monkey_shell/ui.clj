@@ -50,7 +50,7 @@
                                                        :ui.session.settings.open)]}]}]}}})
 
 (defn session-settings [state]
-  (ui/window (get-in state [:ui.session.settings.window])
+  (ui/window (get-in state [:ui :session :settings :window])
              (ui/vbox [(ui/radio-group (members->true state))
                        (ui/text-entry :ui.session.settings.set-new-id :add-member "Add member")
                        (ui/squared-btn "OK" :ui.session.settings.close)])))

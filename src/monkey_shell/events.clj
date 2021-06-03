@@ -4,8 +4,7 @@
             [clojure.string :as str]
             [clojure.java.shell :as shell]))
 
-(defn sync-session! []
-  (db/sync-session! (state/get :session)))
+
 
 (defn init!
   [user-id]
@@ -18,15 +17,18 @@
                                (state/with-focus _ (keyword (get-in _ [:session :id]))))))
 
     (state/swap!_
-      (assoc _ :input ""
+      (assoc _ :ui {:session {:settings {:window {:showing false}}}
+                    :sidebar {}}
                :user (db/fetch-user user-id)
                :shell-sessions (db/pull-walk sessions))
       (state/with-focus _ first))))
 
+(defn sync-session! []
+  (db/sync-session! (state/get :session)))
 
 (defn execute! []
   (state/swap!_
-    (let [cmd-args (str/split (:input _) #" ")
+    (let [cmd-args (str/split (get-in _ [:ui :session :input]) #" ")
           result (apply shell/sh cmd-args)]
       (update-in _ [:session :history]
                  conj {:cmd-args cmd-args
@@ -35,16 +37,17 @@
 
 (defn new-session! []
   (state/swap! state/with-new-session
-               (state/get :room-to-create))
+               (state/get [:ui :session :new-id]))
   (sync-session!))
 
 (defn add-member! []
   (state/swap! state/with-new-session
-               (state/get [:ui :session :new-id]))
+               (state/get [:ui :session :settings :new-member-id]))
   (sync-session!))
 
 (defn handler
   [event]
+  (println "handling: " (:event/type event))
   (case (:event/type event)
 
     :execute (execute!)

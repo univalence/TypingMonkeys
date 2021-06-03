@@ -14,7 +14,7 @@
 
 (defn put!
   ([v] (reset! *state v))
-  ([x v] (u/set (get) x v)))
+  ([x v] (put! (u/set (get) x v))))
 
 (def swap!
   (partial core/swap! *state))
@@ -62,5 +62,7 @@
 
   (get)
 
-  (assert (get [:p :o]) 43))
+  (assert (get [:p :o]) 43)
+
+  (put! [:a :b :c] 1))
 
