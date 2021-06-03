@@ -48,7 +48,7 @@
   (case (:event/type event)
 
     :execute (execute!)
-    :create-session (new-session!)
+    :new-session (new-session!)
     :add-member (add-member!)
 
     :ui.session.set-input

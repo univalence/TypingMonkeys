@@ -30,7 +30,7 @@
 
 (defn watch! [x callback]
   (st/consume (fn [x]
-                (println "consume " x)
+                #_(println "consume " x)
                 (let [data (pull-walk x)]
                   (callback data)))
               (f/->stream x)))

@@ -60,5 +60,7 @@
 
   (upd! [:p :o] inc)
 
+  (get)
+
   (assert (get [:p :o]) 43))
 
