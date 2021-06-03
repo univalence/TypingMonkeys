@@ -9,6 +9,24 @@
                   [:shell-sessions (keyword (get-in @shell-state/*state [:session :id]))
                    :members]) (repeat true)))
 
+(defn text-thread
+  "Chronologically ordered text.
+  ATM it only prints the last cmd stdout,
+  TODO print full history "
+  [state]
+  {:fx/type      :scroll-pane
+   :pref-width   400
+   :pref-height  400
+   :v-box/vgrow  :always
+   :fit-to-width true
+   :content      {:fx/type  :v-box
+                  :children [{:fx/type :text
+                              :text    (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
+                                           first
+                                           :result
+                                           :out
+                                           str)}]}})
+
 (defn shell [state] {:fx/type :stage
                      :showing true
                      :width   600
@@ -21,7 +39,7 @@
                                                                             (keys (walk/stringify-keys
                                                                                     (get state :shell-sessions))))
                                                                 {:fx/type  :v-box
-                                                                 :children [(ui/text-thread state)
+                                                                 :children [(text-thread state)
                                                                             (ui/text-entry :capture-text :execute)
                                                                             (ui/squared-btn
                                                                               (str (get-in @shell-state/*state [:session :id]) "'s settings")
