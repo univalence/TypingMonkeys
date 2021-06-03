@@ -82,8 +82,7 @@
 
 
 (defn many [state]
-  {:fx/type fx/ext-many
-   :desc    [(root state) (member-select state)]})
+  (ui/many [(root state) (member-select state)]))
 
 (defn handler
   "HANDLER"

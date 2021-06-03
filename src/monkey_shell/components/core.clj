@@ -1,4 +1,11 @@
-(ns monkey-shell.components.core)
+(ns monkey-shell.components.core
+  (:require [cljfx.api :as fx]))
+
+(defn many
+  "Component that allow multiple window-ing"
+  [component-vector]
+  {:fx/type fx/ext-many
+   :desc    component-vector})
 
 (defn vbox
   "Vbox wrapper"
