@@ -15,6 +15,7 @@
 
   com.google.firebase/firebase-admin {:mvn/version "7.1.0"}
   lurodrigo/firestore-clj {:mvn/version "1.2.1"}
+  babashka/process {:mvn/version "0.0.1"}
 
   }
 
