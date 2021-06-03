@@ -20,7 +20,7 @@
 
 (defn pull-walk [x]
   (cond
-    (or (fu/ref? x) (fu/query? x)) (pull-walk (f/pull x))
+    (or (fu/ref? x) (fu/query? x)) (fu/with-ref x (pull-walk (f/pull x)))
     (map? x) (into {} (map (fn [[k v]] [(keyword k) (pull-walk v)]) x))
     (vector? x) (mapv pull-walk x)
     (instance? HashMap x) (pull-walk (into {} x))
@@ -30,38 +30,54 @@
 (defn fetch-user
   [user-id]
   (-> (f/doc db (str "users/" user-id))
-      (f/pull-doc)
-      (walk/keywordize-keys)
+      (pull-walk)
       (assoc :id user-id)))
 
-(defn listen!
-  [query k]
-  (st/consume (fn [x]
-                (swap! *state assoc k (pull-walk x)))
-              (f/->stream query)))
+(defn new-session
+  [id user]
+  {:id id
+   :host user
+   :members [user]
+   :history []})
+
+(defn with-new-session [state]
+  (let [session-id (str (gensym "shell_"))]
+    (assoc state :session
+                 (new-session session-id (:user state)))))
+
+(defn with-focus [state id]
+  (println 'wf id)
+  (if-let [[session-id session-data]
+           (or (find (:shell-sessions state) id)
+               (first (:shell-sessions state)))]
+    (assoc state :session (assoc session-data :id (name session-id)))
+    (with-new-session state)))
 
 (defn init!
   [user-id]
-  (let [sessions (fetch-user-sessions user-id)
-        sessions-data (pull-walk sessions)
-        [session-id session-data] (first sessions-data)]
-    (swap! *state assoc
-           :user (fetch-user user-id)
-           :input ""
-           :session (assoc session-data :id (name session-id))
-           :shell-sessions sessions-data)
-    (listen! sessions :shell-sessions)))
+  (let [sessions (fetch-user-sessions user-id)]
 
-(init! "pierrebaille@gmail.com")
+    (st/consume (fn [x]
+                  (println "consume " x)
+                  (swap! *state
+                         #(-> (assoc % :shell-sessions (pull-walk x))
+                              (with-focus (keyword (get-in % [:session :id]))))))
+                (f/->stream sessions))
 
-(deref *state)
+    (swap! *state
+           #(-> (assoc %
+                  :input ""
+                  :user (fetch-user user-id)
+                  :shell-sessions (pull-walk sessions))
+                (with-focus first)))))
 
 (defn sync-session!
   []
   (let [session (get @*state :session)]
     (-> (f/coll db "shell-sessions")
         (f/doc (:id session))
-        (f/set! (walk/stringify-keys session)))))
+        (f/set! (-> (update session :members (partial mapv fu/data->ref))
+                    (walk/stringify-keys))))))
 
 (defn execute! []
   (swap! *state
@@ -98,11 +114,15 @@
                                                            :pref-width 100
                                                            :on-action {:event/type :execute}}]}]}}})
 
+(init! "pierrebaille@gmail.com")
+
 (fx/mount-renderer
   *state
   (fx/create-renderer
     :middleware (fx/wrap-map-desc assoc :fx/type root)
     :opts {:fx.opt/map-event-handler map-event-handler}))
 
-(deref *state)
+#_(as-> (deref *state) _
+    (get-in _ [:session :members])
+    (mapv fu/data->ref _ ))
 
