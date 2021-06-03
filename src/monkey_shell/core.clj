@@ -5,7 +5,8 @@
             [clojure.walk :as walk]
             [manifold.stream :as st]
             [typing-monkeys.utils.firestore :as fu]
-            [clojure.java.shell :as shell])
+            [clojure.java.shell :as shell]
+            [monkey-shell.components.core :as ui])
   (:import (java.util HashMap ArrayList)))
 
 (defonce db
