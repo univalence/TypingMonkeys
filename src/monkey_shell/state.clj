@@ -1,89 +1,64 @@
 (ns monkey-shell.state
-  (:require [clojure.string :as str]
-            [firestore-clj.core :as f]
-            [clojure.walk :as walk]
-            [manifold.stream :as st]
-            [typing-monkeys.utils.firestore :as fu]
-            [clojure.java.shell :as shell]
-            [monkey-shell.components.core :as ui])
-  (:import (java.util HashMap ArrayList)))
-
-(defonce db
-  (f/client-with-creds "data/unsafe.json"))
+  (:refer-clojure :exclude [swap! get set!])
+  (:require [clojure.core :as core]
+            [monkey-shell.data :as data]
+            [typing-monkeys.utils.misc :as u]))
 
 (def *state (atom {}))
 
-(defn fetch-user-sessions
-  [user-id]
-  (-> (f/coll db "shell-sessions")
-      (f/filter-contains "members" (f/doc db (str "users/" user-id)))))
+;; generic
 
-(defn pull-walk [x]
-  (cond
-    (or (fu/ref? x) (fu/query? x)) (fu/with-ref x (pull-walk (f/pull x)))
-    (map? x) (into {} (map (fn [[k v]] [(keyword k) (pull-walk v)]) x))
-    (vector? x) (mapv pull-walk x)
-    (instance? HashMap x) (pull-walk (into {} x))
-    (instance? ArrayList x) (pull-walk (into [] x))
-    :else x))
+(defn get
+  ([] (deref *state))
+  ([x] (u/get (get) x)))
 
-(defn fetch-user
-  [user-id]
-  (-> (f/doc db (str "users/" user-id))
-      (pull-walk)
-      (assoc :id user-id)))
+(defn put!
+  ([v] (reset! *state v))
+  ([x v] (u/set (get) x v)))
 
-(defn new-session
-  [id user]
-  {:id id
-   :host user
-   :members [user]
-   :history []})
+(def swap!
+  (partial core/swap! *state))
 
-(defn with-new-session [state]
-  (let [session-id (str (gensym "shell_"))]
+(defmacro swap!-> [& xs]
+  `(swap! (fn [state#] (-> state# ~@xs))))
+
+(defmacro swap!_ [& xs]
+  `(swap! (fn [state#] (as-> state# ~'_ ~@xs))))
+
+(defn upd!
+  ([& xs] (put! (u/upd* (get) xs))))
+
+;; specific
+
+(defn with-new-session [state & [session-id]]
+  (let [session-id (or session-id (str (gensym "shell_")))]
     (assoc state :session
-                 (new-session session-id (:user state)))))
+                 (data/new-session session-id (:user state)))))
 
 (defn with-focus [state id]
-  (println 'wf id)
   (if-let [[session-id session-data]
            (or (find (:shell-sessions state) id)
                (first (:shell-sessions state)))]
     (assoc state :session (assoc session-data :id (name session-id)))
     (with-new-session state)))
 
-(defn init!
-  [user-id]
-  (let [sessions (fetch-user-sessions user-id)]
+;; try
 
-    (st/consume (fn [x]
-                  (println "consume " x)
-                  (swap! *state
-                         #(-> (assoc % :shell-sessions (pull-walk x))
-                              (with-focus (keyword (get-in % [:session :id]))))))
-                (f/->stream sessions))
+(comment
 
-    (swap! *state
-           #(-> (assoc %
-                  :input ""
-                  :user (fetch-user user-id)
-                  :shell-sessions (pull-walk sessions))
-                (with-focus first)))))
+  (swap!_
+    (merge _ {:foo :bar})
+    (assoc-in _ [:p :o] 42))
 
-(defn sync-session!
-  []
-  (let [session (get @*state :session)]
-    (-> (f/coll db "shell-sessions")
-        (f/doc (:id session))
-        (f/set! (-> (update session :members (partial mapv fu/data->ref))
-                    (walk/stringify-keys))))))
+  (swap!_
+    (assoc _ :a 1)
+    (update _ :a inc)
+    (merge _ {:b 2 :c 3}))
 
-(defn execute! []
-  (swap! *state
-         (fn [state]
-           (let [cmd-args (str/split (:input state) #" ")
-                 result (apply shell/sh cmd-args)]
-             (update-in state [:session :history]
-                        conj {:cmd-args cmd-args
-                              :result result})))))
+  (get)
+  (get :a)
+
+  (upd! [:p :o] inc)
+
+  (assert (get [:p :o]) 43))
+

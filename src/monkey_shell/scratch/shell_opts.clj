@@ -70,7 +70,7 @@
                     :height  600
                     :scene   {:fx/type :scene
                               :root    {:fx/type  :v-box
-                                        :children [(ui/text-entry :capture-new-room-text :create-session "Add Session")
+                                        :children [(ui/text-entry :capture-new-session-text :create-session "Add Session")
                                                    {:fx/type  :h-box
                                                     :children [(ui/sidebar :handle-sidebar-click
                                                                            (keys (walk/stringify-keys
@@ -92,7 +92,7 @@
     :capture-text (swap! *state assoc :input (get event :fx/event))
     :execute (do (execute! (get-in @*state [:session :id])))
     :handle-sidebar-click (swap! *state assoc-in [:session :id] (get event :click-payload))
-    :capture-new-room-text (swap! *state assoc :room-to-create (get event :fx/event))
+    :capture-new-session-text (swap! *state assoc :room-to-create (get event :fx/event))
     :create-session (create-session! (get @*state :room-to-create))
     :open-settings (swap! *state assoc-in [:settings-window :showing] true)
     :close-settings (swap! *state assoc-in [:settings-window :showing] false)

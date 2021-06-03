@@ -1,5 +1,16 @@
 (ns monkey-shell.core
-  (:require [monkey-shell.state :as state]
-            [monkey-shell.components.core :as ui]))
+  (:require [monkey-shell.state :as state :refer [*state]]
+            [monkey-shell.events :as events]
+            [monkey-shell.ui :as ui]
+            [cljfx.api :as fx]))
 
-(defn handler)
+(events/init! "pierrebaille@gmail.com")
+
+(fx/mount-renderer
+  *state
+  (fx/create-renderer
+    :middleware (fx/wrap-map-desc assoc :fx/type ui/root)
+    :opts {:fx.opt/map-event-handler events/handler}))
+
+(comment
+  (ui/root (state/get)))
