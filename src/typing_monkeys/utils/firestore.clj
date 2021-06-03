@@ -1,7 +1,7 @@
 (ns typing-monkeys.utils.firestore
   (:require [firestore-clj.core :as f]
             [manifold.stream :as st])
-  (:import (com.google.cloud.firestore DocumentReference CollectionReference Firestore DocumentSnapshot QuerySnapshot)
+  (:import (com.google.cloud.firestore DocumentReference CollectionReference Firestore DocumentSnapshot Query QuerySnapshot)
            (java.io Writer)))
 
 (defn doc-ref? [x]
@@ -13,6 +13,15 @@
 (defn ref? [x]
   (or (doc-ref? x)
       (coll-ref? x)))
+
+(defn query? [x]
+  (instance? Query x))
+
+(defn with-ref [ref data]
+  (vary-meta data assoc :ref ref))
+
+(defn data->ref [x]
+  (-> x meta :ref))
 
 (defn overide-print-methods []
 

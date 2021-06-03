@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "@uiw/react-codemirror": "^3.0.6",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "shadow-cljs": "^2.12.5"
+  },
+  "not used": {
+    "@monaco-editor/loader": "^1.0.1",
+    "@uiw/react-monacoeditor": "^3.2.1",
+    "codemirror": "^5.61.0",
+    "monaco-editor": "^0.23.0"
+  }
+}
