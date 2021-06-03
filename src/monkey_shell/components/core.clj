@@ -59,12 +59,13 @@
 
 (defn window
   "Window component"
-  [root-component]
-  {:fx/type       :stage
-   :always-on-top true
-   :showing       true
-   :scene         {:fx/type :scene
-                   :root    root-component}})
+  [option-map root-component]
+  (merge {:fx/type       :stage
+          :always-on-top true
+          :showing       true
+          :scene         {:fx/type :scene
+                          :root    root-component}}
+         option-map))
 
 (defn radio-btn
   "Single radio button,
