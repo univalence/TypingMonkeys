@@ -9,9 +9,6 @@
         (map :id _)
         (zipmap _ (repeat true))))
 
-
-
-
 (defn text-thread
   "Chronologically ordered text.
   ATM it only prints the last cmd stdout,
@@ -24,11 +21,8 @@
    :fit-to-width true
    :content {:fx/type :v-box
              :children [{:fx/type :text
-                         :text (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
-                                   first
-                                   :result
-                                   :out
-                                   str)}]}})
+                         :text (-> (get-in state [:session :history])
+                                   last :result :out str)}]}})
 
 (defn session [state]
   {:fx/type :stage
@@ -54,7 +48,6 @@
              (ui/vbox [(ui/radio-group (members->true state))
                        (ui/text-entry :ui.session.settings.set-new-id :add-member "Add member")
                        (ui/squared-btn "OK" :ui.session.settings.close)])))
-
 
 (defn root [state]
   (ui/many [(session state)
