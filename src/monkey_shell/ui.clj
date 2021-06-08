@@ -22,7 +22,7 @@
    :content {:fx/type :v-box
              :children [{:fx/type :text
                          :text (-> (get-in state [:session :history])
-                                   last :result :out str)}]}})
+                                   last :out str)}]}})
 
 (defn session [state]
   {:fx/type :stage
