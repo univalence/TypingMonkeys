@@ -17,6 +17,8 @@
   lurodrigo/firestore-clj {:mvn/version "1.2.1"}
   babashka/process {:mvn/version "0.0.1"}
 
+  com.middlesphere/clj-terminal {:mvn/version "0.1.0-beta"}
+
   }
 
  :aliases

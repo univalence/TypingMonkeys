@@ -1,9 +1,11 @@
 (ns monkey-shell.scratch.shell-opts
   (:require [cljfx.api :as fx]
+            [cljfx.css :as css]
             [clojure.string :as str]
             [clojure.walk :as walk]
             [clojure.java.shell :as shell]
-            [monkey-shell.components.core :as ui]))
+            [monkey-shell.components.core :as ui]
+            [monkey-shell.style.terminal :as term-style]))
 
 (def *state (atom {:settings-window {:showing false}
 
@@ -64,21 +66,50 @@
 
 (type settings-renderer)
 
+(defn text-thread
+  "Chronologically ordered text.
+  ATM it only prints the last cmd stdout,
+  TODO print full history "
+  [state]
+  {:fx/type      :scroll-pane
+   :style-class  "app-code"
+   :pref-width   800
+   :pref-height  400
+   :v-box/vgrow  :always
+   :fit-to-width true
+   :content      {:fx/type  :v-box
+                  :children [{:fx/type     :label
+                              :style-class "app-code"
+                              :text        (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
+                                               first
+                                               :result
+                                               :out
+                                               str)}
+
+                             {:fx/type  :h-box
+                              :children [{:fx/type     :label
+                                          :style-class "app-code"
+                                          :text        "helloworld:<DIR>$"}
+                                         (ui/text-entry :capture-text :execute)
+
+                                         ]}]}})
+
 (defn root [state] {:fx/type :stage
                     :showing true
-                    :width   600
+                    :width   1050
                     :height  600
-                    :scene   {:fx/type :scene
-                              :root    {:fx/type  :v-box
-                                        :children [(ui/text-entry :capture-new-session-text :create-session "Add Session")
-                                                   {:fx/type  :h-box
-                                                    :children [(ui/sidebar :handle-sidebar-click
-                                                                           (keys (walk/stringify-keys
-                                                                                   (get state :shell-sessions))))
-                                                               {:fx/type  :v-box
-                                                                :children [(ui/text-thread state)
-                                                                           (ui/text-entry :capture-text :execute)
-                                                                           (ui/squared-btn (str (get-in @*state [:session :id]) "'s settings") :open-settings)]}]}]}}})
+                    :scene   {:fx/type     :scene
+                              :stylesheets [(::css/url (term-style/style))]
+                              :root        {:fx/type  :v-box
+                                            :children [(ui/text-entry :capture-new-session-text :create-session "Add Session")
+                                                       {:fx/type  :h-box
+                                                        :children [(ui/sidebar :handle-sidebar-click
+                                                                               (keys (walk/stringify-keys
+                                                                                       (get state :shell-sessions))))
+                                                                   {:fx/type  :v-box
+                                                                    :children [(text-thread state)
+
+                                                                               (ui/squared-btn (str (get-in @*state [:session :id]) "'s settings") :open-settings)]}]}]}}})
 
 (defn many [state]
   (ui/many [(root state) (member-select state)]))
