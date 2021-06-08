@@ -1,8 +1,8 @@
 (ns monkey-shell.events
   (:require [monkey-shell.db :as db :refer [db]]
             [monkey-shell.state :as state :refer [*state]]
-            [clojure.string :as str]
-            [clojure.java.shell :as shell]))
+            [monkey-shell.shell :as shell]
+            [clojure.string :as str]))
 
 (defn init!
   [user-id]
@@ -25,13 +25,18 @@
   (db/sync-session! (state/get :session)))
 
 (defn execute! []
-  (state/swap!_
-    (let [cmd-args (str/split (get-in _ [:ui :session :input]) #" ")
-          result (apply shell/sh cmd-args)]
-      (update-in _ [:session :history]
-                 conj {:cmd-args cmd-args
-                       :result result})))
-  (sync-session!))
+  (let [session-id (keyword (state/get [:session :id]))
+        cmd-args (str/split (state/get [:ui :session :input]) #" ")]
+    (shell/execute cmd-args
+                   (fn [ret]
+                     (state/swap!_
+                       (update-in _ [:shell-sessions session-id :history]
+                                  #(conj (pop %)
+                                         {:cmd-args cmd-args
+                                          :out ret})))
+                     (db/sync-session!
+                       (assoc (state/get [:shell-sessions session-id])
+                         :id (name session-id)))))))
 
 (defn new-session! []
   (state/swap! state/with-new-session
