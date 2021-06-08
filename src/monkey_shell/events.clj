@@ -4,8 +4,6 @@
             [clojure.string :as str]
             [clojure.java.shell :as shell]))
 
-
-
 (defn init!
   [user-id]
   (let [sessions

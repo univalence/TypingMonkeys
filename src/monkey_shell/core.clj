@@ -4,7 +4,7 @@
             [monkey-shell.ui :as ui]
             [cljfx.api :as fx]))
 
-(events/init! "pierrebaille@gmail.com")
+(events/init! "bastien@univalence.io")
 
 (fx/mount-renderer
   *state

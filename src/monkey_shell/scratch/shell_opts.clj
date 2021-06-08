@@ -1,4 +1,4 @@
-(ns monkey-shell.containers.shell-opts
+(ns monkey-shell.scratch.shell-opts
   (:require [cljfx.api :as fx]
             [clojure.string :as str]
             [clojure.walk :as walk]
@@ -79,7 +79,6 @@
                                                                 :children [(ui/text-thread state)
                                                                            (ui/text-entry :capture-text :execute)
                                                                            (ui/squared-btn (str (get-in @*state [:session :id]) "'s settings") :open-settings)]}]}]}}})
-
 
 (defn many [state]
   (ui/many [(root state) (member-select state)]))
