@@ -14,7 +14,7 @@
                              :app.style/control-color       "#000"
                              :app.style/control-hover-color "#f4f4f4"
                              :app.style/background-color    "#eee"
-                             :app.style/spacing             10
+                             :app.style/spacing             1
                              :app.style/scroll-bar-size     9
                              :app.style/padding             20
                              :app.style/corner-size         5
@@ -24,7 +24,9 @@
                               :-fx-background-color "#000"
                               :-fx-wrap-text        true
                               :-fx-font-weight      weight
-                              :-fx-font-size        size})
+                              :-fx-font-size        size
+
+                              })
                       control-shadow (format "dropshadow(gaussian, %s, 5, 0, 0, 1)"
                                              (:app.style/shadow-color style))
                       inner-shadow (format "innershadow(gaussian, %s, 5, 0, 0, 2)"
@@ -50,13 +52,8 @@
                     style
                     {".app"         {"-text-field" (merge
                                                      (text 13 :normal)
-                                                     border
-                                                     {:-fx-highlight-fill      (:app.style/text-color style)
-                                                      :-fx-padding             (:app.style/label-padding style)
-                                                      :-fx-prompt-text-fill    (:app.style/help-color style)
-                                                      :-fx-highlight-text-fill (:app.style/background-color style)
-                                                      :-fx-effect              inner-shadow
-                                                      ":focused"               {:-fx-border-color (:app.style/focus-color style)}})
+                                                     {:-fx-border-color     "transparent"
+                                                      :-fx-background-color "transparent"})
 
                                      "-code"       (merge
                                                      (text 13 :normal)

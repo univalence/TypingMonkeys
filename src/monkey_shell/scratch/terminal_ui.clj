@@ -3,7 +3,6 @@
             [clojure.pprint :as pprint]
             [cljfx.api :as fx]))
 
-
 (def style
   (css/register ::style
                 (let [base-color "#222"
@@ -76,13 +75,8 @@
                                            ":selected > .box > .mark" {:-fx-background-color (:app.style/text-color style)}}
                              "-text-field" (merge
                                              (text 13 :normal)
-                                             border
-                                             {:-fx-highlight-fill "#647bbe"
-                                              :-fx-padding (:app.style/label-padding style)
-                                              :-fx-prompt-text-fill (:app.style/help-color style)
-                                              :-fx-highlight-text-fill (:app.style/background-color style)
-                                              :-fx-effect inner-shadow
-                                              ":focused" {:-fx-border-color (:app.style/focus-color style)}})}
+                                             {:-fx-border-color "transparent"
+                                              :-fx-background-color "transparent"})}
                      ".scroll-pane" (merge
                                       border
                                       {:-fx-effect inner-shadow
@@ -147,7 +141,8 @@
                                                 :text "Second Button"}]}
                                    {:fx/type :text-field
                                     :style-class "app-text-field"
-                                    :prompt-text "type here something"}
+                                    :prompt-text "type here something"
+                                    :text "⌷"}
                                    {:fx/type :label
                                     :style-class "app-sub-header"
                                     :text "css"}

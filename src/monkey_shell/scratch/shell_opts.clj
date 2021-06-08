@@ -90,9 +90,13 @@
                               :children [{:fx/type     :label
                                           :style-class "app-code"
                                           :text        "helloworld:<DIR>$"}
-                                         (ui/text-entry :capture-text :execute)
+                                         {:fx/type  :h-box
 
-                                         ]}]}})
+                                          :children [{:fx/type         :text-field
+                                                      :style-class     "app-text-field"
+                                                      :prompt-text     "_"
+                                                      :on-text-changed {:event/type :capture-text}}
+                                                     (ui/squared-btn "EXEC" :execute)]}]}]}})
 
 (defn root [state] {:fx/type :stage
                     :showing true
