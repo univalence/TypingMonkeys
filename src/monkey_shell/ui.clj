@@ -2,6 +2,9 @@
   (:require [monkey-shell.components.core :as ui]
             [clojure.walk :as walk]))
 
+(defn focused-session [state]
+  (get-in state [:shell-sessions (:focused-session state)]))
+
 (defn members->true [state]
   "TODO : MOVE TO \"DATA\" NAMESPACE"
   (as-> state _
@@ -21,8 +24,8 @@
    :fit-to-width true
    :content {:fx/type :v-box
              :children [{:fx/type :text
-                         :text (-> (get-in state [:session :history])
-                                   last :out str)}]}})
+                         :text (-> (focused-session state)
+                                   :history last :out str)}]}})
 
 (defn session [state]
   {:fx/type :stage
@@ -31,6 +34,7 @@
    :height 600
    :scene {:fx/type :scene
            :root {:fx/type :v-box
+                  :on-key-pressed {:event/type :keypressed}
                   :children [(ui/text-entry :ui.session.set-new-id :new-session "Add Session")
                              {:fx/type :h-box
                               :children [(ui/sidebar :ui.sidebar.click

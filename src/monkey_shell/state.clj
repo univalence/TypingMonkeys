@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [swap! get set!])
   (:require [clojure.core :as core]
             [monkey-shell.data :as data]
-            [typing-monkeys.utils.misc :as u]))
+            [typing-monkeys.utils.misc :as u]
+            [typing-monkeys.utils.firestore :as fu]))
 
 (def *state (atom {}))
 
@@ -32,21 +33,21 @@
 
 (defn with-new-session [state & [session-id]]
   (let [session-id (or session-id (str (gensym "shell_")))]
-    (assoc state :session
-                 (data/new-session session-id (:user state)))))
+    (-> state
+        (assoc :focused-session session-id)
+        (assoc-in [:shell-sessions session-id]
+                  (data/new-session session-id (:user state))))))
 
-(defn with-focus [state id]
-  (if-let [[session-id session-data]
-           (or (find (:shell-sessions state) id)
-               (first (:shell-sessions state)))]
-    (assoc state :session (assoc session-data :id (name session-id)))
+(defn with-focus [{:as state :keys [shell-sessions]} & [id]]
+  (if-let [[session-id _]
+           (or (find shell-sessions id)
+               (first shell-sessions))]
+    (assoc state :focused-session session-id)
     (with-new-session state)))
 
 (defn host-session? [state session-id]
-  (println (get-in state [:user :id])
-           (get-in state [:shell-sessions (keyword session-id) :host :id]))
-  (= (get-in state [:user :id])
-     (get-in state [:shell-sessions (keyword session-id) :host :id])))
+  (= (fu/data->ref (:user state))
+     (fu/data->ref (get-in state [:shell-sessions (keyword session-id) :host]))))
 
 ;; try
 

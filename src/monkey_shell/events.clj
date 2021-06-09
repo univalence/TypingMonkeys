@@ -2,7 +2,8 @@
   (:require [monkey-shell.db :as db :refer [db]]
             [monkey-shell.state :as state :refer [*state]]
             [monkey-shell.shell :as shell]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import [javafx.scene.input KeyCode KeyEvent]))
 
 (defn swap-session! [id f]
   (let [session (state/get [:shell-sessions (keyword id)])
@@ -21,15 +22,14 @@
 
     (db/watch! sessions
                (fn [sessions-data]
-                 (state/swap!_ (assoc _ :shell-sessions sessions-data)
-                               (state/with-focus _ (keyword (get-in _ [:session :id]))))))
+                 (state/swap! assoc :shell-sessions sessions-data)))
 
     (state/swap!_
       (assoc _ :ui {:session {:settings {:window {:showing false}}}
                     :sidebar {}}
                :user (db/fetch-user user-id)
                :shell-sessions (db/pull-walk sessions))
-      (state/with-focus _ first))))
+      (state/with-focus _))))
 
 (defn sync-session! []
   (db/sync-session! (state/get :session)))
@@ -37,7 +37,7 @@
 (defn execute! []
 
   (let [state (state/get)
-        session-id (keyword (get-in state [:session :id]))
+        session-id (keyword (:focused-session state))
         cmd-args (str/split (get-in state [:ui :session :input]) #" ")]
 
     (if (state/host-session? state session-id)
@@ -69,11 +69,16 @@
 (defn handler
   [event]
   (println "handling: " (:event/type event) (get event :click-payload))
+
   (case (:event/type event)
 
     :execute (execute!)
     :new-session (new-session!)
     :add-member (add-member!)
+
+    :keypressed (condp = (.getCode ^KeyEvent (:fx/event event))
+                  KeyCode/ENTER (execute!)
+                  nil)
 
     :ui.session.set-input
     (state/put! [:ui :session :input] (get event :fx/event))
