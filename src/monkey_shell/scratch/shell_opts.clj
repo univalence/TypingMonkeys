@@ -1,9 +1,12 @@
 (ns monkey-shell.scratch.shell-opts
   (:require [cljfx.api :as fx]
+            [cljfx.css :as css]
             [clojure.string :as str]
             [clojure.walk :as walk]
             [clojure.java.shell :as shell]
-            [monkey-shell.components.core :as ui]))
+            [monkey-shell.components.core :as ui]
+            [monkey-shell.style.terminal :as term-style]
+            [clojure.string :as str]))
 
 (def *state (atom {:settings-window {:showing false}
 
@@ -63,22 +66,73 @@
     :opts {:fx.opt/map-event-handler handler}))
 
 (type settings-renderer)
+(defn terminal-with-opts [])
+
+(defn parse-ansi
+  "Purpose: reads string with ansi escape sequences for colors
+  then pops out a colored output"
+  [str color-config]
+  (println "not implemented yet: parse-ansi"))
+
+(defn terminal
+  ""
+  [state]
+  {:fx/type      :scroll-pane
+   :style-class  "app-code"
+   :pref-width   800
+   :pref-height  400
+   :v-box/vgrow  :always
+   :fit-to-width true
+   :content      (ui/hbox
+                   {:padding 0
+                    :spacing 0}
+                   [{:fx/type  :v-box
+                     :h-box/hgrow :always
+                     :children [{:fx/type     :label
+                                 :style-class "app-code"
+                                 :text        (str "<NAME>:<DIR>$ "
+                                                   (str/join " " (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
+                                                                     first
+                                                                     :cmd-args))
+
+                                                   "\n\n"
+
+                                                   (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
+                                                       first
+                                                       :result
+                                                       :out
+                                                       str))}
+
+                                {:fx/type  :h-box
+                                 :children [{:fx/type     :label
+                                             :style-class "app-code"
+                                             :text        "<NAME>:<DIR>$"}
+                                            {:fx/type  :h-box
+
+                                             :children [{:fx/type         :text-field
+                                                         :style-class     "app-text-field"
+                                                         :prompt-text     "_"
+                                                         :text            (:input state)
+                                                         :on-text-changed {:event/type :capture-text}}
+                                                        (ui/squared-btn "EXEC" :execute)]}]}]}
+
+                    (ui/squared-btn {:pref-width 30} "⚙" :open-settings)])})
 
 (defn root [state] {:fx/type :stage
                     :showing true
-                    :width   600
+                    :width   1050
                     :height  600
-                    :scene   {:fx/type :scene
-                              :root    {:fx/type  :v-box
-                                        :children [(ui/text-entry :capture-new-session-text :create-session "Add Session")
-                                                   {:fx/type  :h-box
-                                                    :children [(ui/sidebar :handle-sidebar-click
-                                                                           (keys (walk/stringify-keys
-                                                                                   (get state :shell-sessions))))
-                                                               {:fx/type  :v-box
-                                                                :children [(ui/text-thread state)
-                                                                           (ui/text-entry :capture-text :execute)
-                                                                           (ui/squared-btn (str (get-in @*state [:session :id]) "'s settings") :open-settings)]}]}]}}})
+                    :scene   {:fx/type     :scene
+                              :stylesheets [(::css/url (term-style/style))]
+                              :root        {:fx/type  :v-box
+                                            :children [(ui/text-entry :capture-new-session-text :create-session "Add Session")
+                                                       {:fx/type  :h-box
+                                                        :children [(ui/sidebar :handle-sidebar-click
+                                                                               (keys (walk/stringify-keys
+                                                                                       (get state :shell-sessions))))
+                                                                   {:fx/type  :v-box
+                                                                    :children [(terminal state)
+                                                                               (ui/squared-btn (str (get-in @*state [:session :id]) "'s settings") :open-settings)]}]}]}}})
 
 (defn many [state]
   (ui/many [(root state) (member-select state)]))
@@ -89,7 +143,8 @@
   #_(println (get event :session-id))
   (case (:event/type event)
     :capture-text (swap! *state assoc :input (get event :fx/event))
-    :execute (do (execute! (get-in @*state [:session :id])))
+    :execute (do (execute! (get-in @*state [:session :id]))
+                 (swap! *state assoc :input ""))
     :handle-sidebar-click (swap! *state assoc-in [:session :id] (get event :click-payload))
     :capture-new-session-text (swap! *state assoc :room-to-create (get event :fx/event))
     :create-session (create-session! (get @*state :room-to-create))

@@ -17,29 +17,34 @@
 
 (defn hbox
   "Hbox wrapper"
-  [component-vector]
-  {:fx/type  :h-box
-   :padding  20
-   :spacing  10
-   :children component-vector})
+  ([component-vector]
+   (hbox {} component-vector))
+  ([props-map component-vector]
+   (merge {:fx/type  :h-box
+           :padding  20
+           :spacing  10
+           :children component-vector} props-map)))
 
 (defn squared-btn
   "squared button that return its name on click"
-  [text on-action-event-keyword]
-  {:fx/type    :button
-   :text       text
-   :pref-width 150
-   :on-action  {:event/type    on-action-event-keyword
-                :click-payload text}})
+  ([text on-action-event-keyword]
+   (squared-btn {} text on-action-event-keyword))
+
+  ([props-map text on-action-event-keyword]
+   (merge {:fx/type    :button
+           :text       text
+           :pref-width 150
+           :on-action  {:event/type    on-action-event-keyword
+                        :click-payload text}} props-map)))
 
 (defn text-entry
   "Text bar with enter button"
   ([on-text-change-event-keyword on-action-event-keyword]
    (text-entry on-text-change-event-keyword on-action-event-keyword "ENTER"))
   ([on-text-change-event-keyword on-action-event-keyword text]
-   (hbox [{:fx/type         :text-field
-           :on-text-changed {:event/type on-text-change-event-keyword}}
-          (squared-btn text on-action-event-keyword)])))
+   (hbox {} [{:fx/type         :text-field
+              :on-text-changed {:event/type on-text-change-event-keyword}}
+             (squared-btn text on-action-event-keyword)])))
 
 (defn sidebar
   "Menu-like component (list of buttons)"
