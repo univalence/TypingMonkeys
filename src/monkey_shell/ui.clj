@@ -17,6 +17,9 @@
   (ui/window (get-in state [:ui :popup :props])
              (get-in state [:ui :popup :content])))
 
+(defn focused-session [state]
+  (get-in state [:shell-sessions (:focused-session state)]))
+
 (defn members->true [state]
   "TODO : MOVE TO \"DATA\" NAMESPACE"
   (as-> state _
@@ -25,7 +28,7 @@
         (zipmap _ (repeat true))))
 
 (defn text-thread
-  "Chronologically ordered text.
+  "DEPRECATED:Chronologically ordered text.
   ATM it only prints the last cmd stdout,
   TODO print full history "
   [state]
@@ -38,7 +41,6 @@
                   :children [{:fx/type :text
                               :text    (-> (get-in state [:session :history])
                                            last :out str)}]}})
-
 
 (defn terminal
   "Terminal component"
@@ -57,17 +59,15 @@
                      :children    [{:fx/type     :label
                                     :style-class "app-code"
                                     :text        (str "<NAME>:<DIR>$ "
-                                                      (str/join " " (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
-                                                                        first
+                                                      (str/join " " (-> (focused-session state)
+                                                                        :history
+                                                                        last
                                                                         :cmd-args))
 
                                                       "\n\n"
 
-                                                      (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
-                                                          first
-                                                          :result
-                                                          :out
-                                                          str))}
+                                                      (-> (focused-session state)
+                                                          :history last :out str))}
 
                                    {:fx/type  :h-box
                                     :children [{:fx/type     :label
@@ -79,12 +79,9 @@
                                                             :style-class     "app-text-field"
                                                             :prompt-text     "_"
                                                             :text            (:input state)
-                                                            :on-text-changed {:event/type :capture-text}}
-                                                           (ui/squared-btn "EXEC" :execute)]}]}]}
+                                                            :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
 
-                    (ui/squared-btn {:pref-width 30} "⚙" :open-settings)])})
-
-
+                    (ui/squared-btn {:pref-width 30} "⚙" :ui.session.settings.open)])})
 
 
 (defn session [state]
@@ -94,19 +91,20 @@
    :height  600
    :scene   {:fx/type     :scene
              :stylesheets [(::css/url (term-style/style))]
-             :root        {:fx/type  :v-box
-                           :children [
-                                      {:fx/type  :h-box
-                                       :children [(ui/vbox [(ui/squared-btn {:pref-width 30} "+" :ui.popup.new-session)
-                                                            (ui/sidebar :ui.sidebar.click
-                                                                        (keys (walk/stringify-keys
-                                                                                (get state :shell-sessions))))])
-                                                  {:fx/type  :v-box
-                                                   :children [(terminal state)
-                                                              (ui/text-entry :ui.session.set-input :execute)
-                                                              (ui/squared-btn
-                                                                (str (get-in state [:session :id]) "'s settings")
-                                                                :ui.session.settings.open)]}]}]}}})
+             :root        {:fx/type        :v-box
+                           :on-key-pressed {:event/type :keypressed}
+                           :children       [
+                                            {:fx/type  :h-box
+                                             :children [(ui/vbox [(ui/squared-btn {:pref-width 30} "+" :ui.popup.new-session)
+                                                                  (ui/sidebar :ui.sidebar.click
+                                                                              (keys (walk/stringify-keys
+                                                                                      (get state :shell-sessions))))])
+                                                        {:fx/type  :v-box
+                                                         :children [(terminal state)
+                                                                    #_(ui/text-entry :ui.session.set-input :execute)
+                                                                    #_(ui/squared-btn
+                                                                      (str (:focused-session state))
+                                                                      :ui.session.settings.open)]}]}]}}})
 
 (defn session-settings [state]
   (ui/window (get-in state [:ui :session :settings :window])
