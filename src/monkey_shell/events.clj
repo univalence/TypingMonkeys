@@ -4,6 +4,16 @@
             [monkey-shell.shell :as shell]
             [clojure.string :as str]))
 
+(defn swap-session! [id f]
+  (let [session (state/get [:shell-sessions (keyword id)])
+        next-session (f session)]
+    (state/swap!_ (assoc-in _ [:shell-sessions id] next-session))
+    (db/sync-session! (assoc next-session :id (name id)))))
+
+(defmacro swap-session!_ [id & forms]
+  `(swap-session! ~id (fn [session#]
+                        (as-> session# ~'_ ~@forms))))
+
 (defn init!
   [user-id]
   (let [sessions
@@ -25,18 +35,26 @@
   (db/sync-session! (state/get :session)))
 
 (defn execute! []
-  (let [session-id (keyword (state/get [:session :id]))
-        cmd-args (str/split (state/get [:ui :session :input]) #" ")]
-    (shell/execute cmd-args
-                   (fn [ret]
-                     (state/swap!_
-                       (update-in _ [:shell-sessions session-id :history]
-                                  #(conj (pop %)
-                                         {:cmd-args cmd-args
-                                          :out ret})))
-                     (db/sync-session!
-                       (assoc (state/get [:shell-sessions session-id])
-                         :id (name session-id)))))))
+
+  (let [state (state/get)
+        session-id (keyword (get-in state [:session :id]))
+        cmd-args (str/split (get-in state [:ui :session :input]) #" ")]
+
+    (if (state/host-session? state session-id)
+      (shell/execute cmd-args
+                     (fn [ret]
+                       (swap-session!_ session-id
+                                       (assoc _ :running true)
+                                       (update _ :history #(conj (pop %)
+                                                                 {:cmd-args cmd-args :out ret}))))
+                     (fn []
+                       (swap-session!_ session-id (dissoc _ :running))))
+
+      (swap-session!_ session-id
+                      (update _ :pending
+                              (fnil conj [])
+                              {:cmd-args cmd-args
+                               :from (get-in state [:user :id])})))))
 
 (defn new-session! []
   (state/swap! state/with-new-session

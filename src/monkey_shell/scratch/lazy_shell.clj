@@ -35,8 +35,23 @@
 (process '[tail -f "foo.txt"]
          {:out :inherit})
 
-(process ["ls"]
-         {:out (callback-writer (fn [x] (println x)))})
+(def done (atom false))
+(def lsp (process ["ls"]
+                  {:out (callback-writer (fn [x]
+                                           (future
+                                             (if (.isAlive (:proc lsp))
+                                               ))
+                                           (println x)))
+                   :exit (fn [_] (println "exit"))
+                   :shutdown (fn [_] (println "shot down " _))}))
+
+
+(.isAlive (:proc lsp))
+(let [fu (future 42)
+      a 1]
+  (+ a 1)
+  @fu)
+
 
 (deref a)
 (:out p)
@@ -57,3 +72,8 @@
 ()
 
 (process ["ls"] {:inherit true})
+(process ["chsh" "-s" "/bin/zsh"]
+         {:inherit true})
+
+(process '[echo "$SHELL"]
+         {:inherit true})

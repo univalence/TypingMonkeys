@@ -38,5 +38,8 @@
 (defn sync-session! [session]
   (-> (f/coll db "shell-sessions")
       (f/doc (:id session))
-      (f/set! (-> (update session :members (partial mapv fu/data->ref))
+      (f/set! (-> session
+                  (update :members (partial mapv fu/data->ref))
+                  (update :host fu/data->ref)
+                  (dissoc :id)
                   (walk/stringify-keys)))))

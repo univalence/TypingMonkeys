@@ -221,6 +221,11 @@
     ((sub-updater :b) M :c inc)
     ((sub-setter :b) M :d 4 :e 5))
 
+(do :threading
+
+    (defmacro >_ [seed & xs]
+      `(as-> ~seed ~'_ ~@xs)))
+
 
 
 

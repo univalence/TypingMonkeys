@@ -9,6 +9,13 @@
       (f (apply str (take len (slurp s)))))))
 
 
-(defn execute [cmd f]
-  (process cmd
-           {:out (callback-writer f)}))
+(defn execute [cmd on-out on-dead]
+  (let [p (atom nil)]
+    (reset! p (process cmd
+                       {:out (callback-writer
+                               (fn [out]
+                                 (on-out out)
+                                 (future (when-not (.isAlive (:proc @p))
+                                           (on-dead)))))}))))
+
+
