@@ -75,11 +75,11 @@
                                                 :text        "<NAME>:<DIR>$"}
                                                {:fx/type  :h-box
 
-                                                :children [{:fx/type         :text-field
-                                                            :style-class     "app-text-field"
-                                                            :prompt-text     "_"
-                                                            :text            (:input state)
-                                                            :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
+                                        :children [{:fx/type :text-field
+                                                    :style-class "app-text-field"
+                                                    :prompt-text "_"
+                                                    :text (get-in state [:ui :session :input])
+                                                    :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
 
                     (ui/squared-btn {:pref-width 30} "⚙" :ui.session.settings.open)])})
 

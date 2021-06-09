@@ -15,7 +15,10 @@
 
 (defn pull-walk [x]
   (cond
-    (or (fu/ref? x) (fu/query? x)) (fu/with-ref x (assoc (pull-walk (f/pull x)) :db/id (f/id x)))
+    (fu/ref? x)
+    (fu/with-ref x (assoc (pull-walk (f/pull x)) :db/id (f/id x)))
+    (fu/query? x)
+    (fu/with-ref x (pull-walk (f/pull x)))
     (map? x) (into {} (map (fn [[k v]] [(keyword k) (pull-walk v)]) x))
     (vector? x) (mapv pull-walk x)
     (instance? HashMap x) (pull-walk (into {} x))
