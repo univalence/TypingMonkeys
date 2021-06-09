@@ -7,8 +7,8 @@
 
 (defn members->true [state]
   "TODO : MOVE TO \"DATA\" NAMESPACE"
-  (as-> state _
-        (get-in _ [:session :members])
+  (as-> (focused-session state) _
+        (get _ :members)
         (map :id _)
         (zipmap _ (repeat true))))
 
@@ -44,7 +44,7 @@
                                           :children [(text-thread state)
                                                      (ui/text-entry :ui.session.set-input :execute)
                                                      (ui/squared-btn
-                                                       (str (get-in state [:session :id]) "'s settings")
+                                                       (str (get state :focused-session) "'s settings")
                                                        :ui.session.settings.open)]}]}]}}})
 
 (defn session-settings [state]
