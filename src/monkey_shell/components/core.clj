@@ -74,3 +74,4 @@
   [id->true?]
   (vbox
     (mapv #(radio-btn (last %) :fixme (first %)) id->true?)))
+

@@ -8,7 +8,10 @@
             [monkey-shell.style.terminal :as term-style]
             [clojure.string :as str]))
 
-(def *state (atom {:settings-window {:showing false}
+(def *state (atom {:popup-content   {:fx/type     :label
+                                     :text        "Error, no content is available"}
+
+                   :settings-window {:showing false}
 
                    :user            {:id "bastien@univalence.io"}
                    :input           nil
@@ -66,7 +69,6 @@
     :opts {:fx.opt/map-event-handler handler}))
 
 (type settings-renderer)
-(defn terminal-with-opts [])
 
 (defn parse-ansi
   "Purpose: reads string with ansi escape sequences for colors
@@ -86,35 +88,35 @@
    :content      (ui/hbox
                    {:padding 0
                     :spacing 0}
-                   [{:fx/type  :v-box
+                   [{:fx/type     :v-box
                      :h-box/hgrow :always
-                     :children [{:fx/type     :label
-                                 :style-class "app-code"
-                                 :text        (str "<NAME>:<DIR>$ "
-                                                   (str/join " " (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
-                                                                     first
-                                                                     :cmd-args))
+                     :children    [{:fx/type     :label
+                                    :style-class "app-code"
+                                    :text        (str "<NAME>:<DIR>$ "
+                                                      (str/join " " (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
+                                                                        first
+                                                                        :cmd-args))
 
-                                                   "\n\n"
+                                                      "\n\n"
 
-                                                   (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
-                                                       first
-                                                       :result
-                                                       :out
-                                                       str))}
+                                                      (-> (get-in state [:shell-sessions (keyword (get-in state [:session :id])) :history])
+                                                          first
+                                                          :result
+                                                          :out
+                                                          str))}
 
-                                {:fx/type  :h-box
-                                 :children [{:fx/type     :label
-                                             :style-class "app-code"
-                                             :text        "<NAME>:<DIR>$"}
-                                            {:fx/type  :h-box
+                                   {:fx/type  :h-box
+                                    :children [{:fx/type     :label
+                                                :style-class "app-code"
+                                                :text        "<NAME>:<DIR>$"}
+                                               {:fx/type  :h-box
 
-                                             :children [{:fx/type         :text-field
-                                                         :style-class     "app-text-field"
-                                                         :prompt-text     "_"
-                                                         :text            (:input state)
-                                                         :on-text-changed {:event/type :capture-text}}
-                                                        (ui/squared-btn "EXEC" :execute)]}]}]}
+                                                :children [{:fx/type         :text-field
+                                                            :style-class     "app-text-field"
+                                                            :prompt-text     "_"
+                                                            :text            (:input state)
+                                                            :on-text-changed {:event/type :capture-text}}
+                                                           (ui/squared-btn "EXEC" :execute)]}]}]}
 
                     (ui/squared-btn {:pref-width 30} "⚙" :open-settings)])})
 
@@ -134,8 +136,11 @@
                                                                     :children [(terminal state)
                                                                                (ui/squared-btn (str (get-in @*state [:session :id]) "'s settings") :open-settings)]}]}]}}})
 
+(defn dynamic-popup [state]
+  (ui/window (:settings-window state) (:popup-content state)))
+
 (defn many [state]
-  (ui/many [(root state) (member-select state)]))
+  (ui/many [(root state) (member-select state) (dynamic-popup state)]))
 
 (defn handler
   "HANDLER"
@@ -152,6 +157,10 @@
     :close-settings (swap! *state assoc-in [:settings-window :showing] false)
     :capture-new-member-text (swap! *state assoc :member-to-add (get event :fx/event))
     :add-member (add-member (get @*state :member-to-add))
+
+    :popup1 (swap! *state assoc :popup-content (ui/squared-btn "test" :mock))
+    :popup2 ()
+
     :mock (println "TODO")))
 
 (fx/mount-renderer
