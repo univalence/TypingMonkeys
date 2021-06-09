@@ -42,6 +42,12 @@
     (assoc state :session (assoc session-data :id (name session-id)))
     (with-new-session state)))
 
+(defn host-session? [state session-id]
+  (println (get-in state [:user :id])
+           (get-in state [:shell-sessions (keyword session-id) :host :id]))
+  (= (get-in state [:user :id])
+     (get-in state [:shell-sessions (keyword session-id) :host :id])))
+
 ;; try
 
 (comment
