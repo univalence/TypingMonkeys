@@ -2,7 +2,8 @@
   (:require [monkey-shell.db :as db :refer [db]]
             [monkey-shell.state :as state :refer [*state]]
             [monkey-shell.shell :as shell]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [monkey-shell.ui :as ui]))
 
 (defn swap-session! [id f]
   (let [session (state/get [:shell-sessions (keyword id)])
@@ -15,6 +16,7 @@
                         (as-> session# ~'_ ~@forms))))
 
 (defn init!
+  ""
   [user-id]
   (let [sessions
         (db/fetch-user-sessions user-id)]
@@ -25,8 +27,11 @@
                                (state/with-focus _ (keyword (get-in _ [:session :id]))))))
 
     (state/swap!_
-      (assoc _ :ui {:session {:settings {:window {:showing false}}}
-                    :sidebar {}}
+      (assoc _ :ui {:session {:settings {}}
+                    :sidebar {}
+                    :popup   {:content (ui/error-popup)
+                              :props   {:showing false}}}
+
                :user (db/fetch-user user-id)
                :shell-sessions (db/pull-walk sessions))
       (state/with-focus _ first))))
@@ -54,7 +59,7 @@
                       (update _ :pending
                               (fnil conj [])
                               {:cmd-args cmd-args
-                               :from (get-in state [:user :id])})))))
+                               :from     (get-in state [:user :id])})))))
 
 (defn new-session! []
   (state/swap! state/with-new-session
@@ -91,4 +96,18 @@
 
     :ui.session.settings.set-new-member-id
     (state/put! [:ui :shell :settings :new-member-id] (get event :fx/event))
-    ))
+
+    :ui.popup.new-session
+    (do
+      (handler {:event/type :ui.popup.set-content
+                :content    (ui/new-session-popup)})
+      (handler {:event/type :ui.popup.show}))
+
+    :ui.popup.show
+    (state/put! [:ui :popup :props :showing] true)
+
+    :ui.popup.hide
+    (state/put! [:ui :popup :props :showing] false)
+
+    :ui.popup.set-content
+    (state/put! [:ui :popup :content] (:content event))))
