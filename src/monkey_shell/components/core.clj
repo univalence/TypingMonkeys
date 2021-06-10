@@ -75,3 +75,9 @@
   (vbox
     (mapv #(radio-btn (last %) :fixme (first %)) id->true?)))
 
+(defn end-popup
+  "Purpose: confirm or cancel btns"
+  [confirm-event-keyword]
+  (hbox [(squared-btn "Confirm" confirm-event-keyword)
+         (squared-btn "Cancel" :ui.popup.hide)]))
+

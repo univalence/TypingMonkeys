@@ -14,5 +14,8 @@
     :opts {:fx.opt/map-event-handler events/handler}))
 
 (comment
+
+  (ui/members->true (state/get))
+  (events/handler {:event/type :ui.popup.show})
   (:ui (state/get))
   (ui/root (state/get)))

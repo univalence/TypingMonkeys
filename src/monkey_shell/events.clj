@@ -69,7 +69,7 @@
 
 (defn new-session! []
   (state/swap! state/with-new-session
-               (state/get [:ui :session :new-id]))
+               (keyword (state/get [:ui :session :new-id])))
   (sync-session!))
 
 (defn add-member! []
@@ -116,6 +116,17 @@
     (do
       (handler {:event/type :ui.popup.set-content
                 :content (ui/new-session-popup)})
+      (handler {:event/type :ui.popup.show}))
+
+    :ui.popup.confirm-new-session
+    (do
+      (handler {:event/type :ui.popup.hide})
+      (handler {:event/type :new-session}))
+
+    :ui.popup.shell-settings
+    (do
+      (handler {:event/type :ui.popup.set-content
+                :content (ui/terminal-settings-popup (state/get))})
       (handler {:event/type :ui.popup.show}))
 
     :ui.popup.show

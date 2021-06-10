@@ -5,37 +5,35 @@
             [clojure.string :as str]
             [cljfx.css :as css]))
 
+(defn focused-session
+  "TODO move to DATA"
+  [state]
+  (get-in state [:shell-sessions (:focused-session state)]))
+
+(defn members->true [state]
+  "TODO : MOVE TO \"DATA\" NAMESPACE
+  FIXME : not working"
+  (as-> (focused-session state) _
+        (get _ :members)
+        (map :db/id _)
+        (zipmap _ (repeat true))))
+
 (defn error-popup []
   {:fx/type :label
    :text    "Error, no content is available"})
 
 (defn new-session-popup []
   (ui/vbox [(ui/text-entry :ui.session.set-new-id :new-session "Add session")
-            (ui/squared-btn "OK" :ui.popup.hide)]))
+            (ui/end-popup :ui.popup.confirm-new-session)]))
 
-(defn members->true [state]
-  "TODO : MOVE TO \"DATA\" NAMESPACE"
-  (as-> state _
-        (get-in _ [:session :members])
-        (map :id _)
-        (zipmap _ (repeat true))))
-
-(defn session-settings [state]
-  (ui/window (get-in state [:ui :session :settings :window])
-             (ui/vbox [(ui/radio-group (members->true state))
-                       (ui/text-entry :ui.session.settings.set-new-id :add-member "Add member")
-                       (ui/squared-btn "OK" :ui.session.settings.close)])))
-
-(defn terminal-settings-popup []
-  (ui/vbox [(ui/text-entry :ui.session.set-new-id :new-session "Add session")
-            (ui/squared-btn "OK" :ui.popup.hide)]))
+(defn terminal-settings-popup [state]
+  (ui/vbox [(ui/radio-group (members->true state))
+            (ui/end-popup :ui.popup.confirm-new-session)]))
 
 (defn dynamic-popup [state]
   (ui/window (get-in state [:ui :popup :props])
              (get-in state [:ui :popup :content])))
 
-(defn focused-session [state]
-  (get-in state [:shell-sessions (:focused-session state)]))
 
 (defn text-thread
   "DEPRECATED:Chronologically ordered text.
@@ -85,13 +83,13 @@
                                                 :text        "<NAME>:<DIR>$"}
                                                {:fx/type  :h-box
 
-                                        :children [{:fx/type :text-field
-                                                    :style-class "app-text-field"
-                                                    :prompt-text "_"
-                                                    :text (get-in state [:ui :session :input])
-                                                    :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
+                                                :children [{:fx/type         :text-field
+                                                            :style-class     "app-text-field"
+                                                            :prompt-text     "_"
+                                                            :text            (get-in state [:ui :session :input])
+                                                            :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
 
-                    (ui/squared-btn {:pref-width 30} "⚙" :ui.session.settings.open)])})
+                    (ui/squared-btn {:pref-width 30} "⚙" :ui.popup.shell-settings)])})
 
 
 (defn session [state]
@@ -111,6 +109,15 @@
                                                         {:fx/type  :v-box
                                                          :children [(terminal state)]}]}]}}})
 
+(defn test-window [state]
+  (ui/window (get-in state [:ui :popup :props]) (ui/squared-btn "text" :ui.session.settings.close)))
+
+(defn test-componenet []
+  {:fx/type :label, :text "coucou"}
+  )
+
 (defn root [state]
   (ui/many [(session state)
+            #_(test-componenet)
+            #_(test-window state)
             (dynamic-popup state)]))
