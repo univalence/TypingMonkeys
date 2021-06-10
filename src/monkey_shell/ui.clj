@@ -10,8 +10,25 @@
    :text    "Error, no content is available"})
 
 (defn new-session-popup []
-  {:fx/type :label
-   :text    "tba"})
+  (ui/vbox [(ui/text-entry :ui.session.set-new-id :new-session "Add session")
+            (ui/squared-btn "OK" :ui.popup.hide)]))
+
+(defn members->true [state]
+  "TODO : MOVE TO \"DATA\" NAMESPACE"
+  (as-> state _
+        (get-in _ [:session :members])
+        (map :id _)
+        (zipmap _ (repeat true))))
+
+(defn session-settings [state]
+  (ui/window (get-in state [:ui :session :settings :window])
+             (ui/vbox [(ui/radio-group (members->true state))
+                       (ui/text-entry :ui.session.settings.set-new-id :add-member "Add member")
+                       (ui/squared-btn "OK" :ui.session.settings.close)])))
+
+(defn terminal-settings-popup []
+  (ui/vbox [(ui/text-entry :ui.session.set-new-id :new-session "Add session")
+            (ui/squared-btn "OK" :ui.popup.hide)]))
 
 (defn dynamic-popup [state]
   (ui/window (get-in state [:ui :popup :props])
@@ -20,12 +37,7 @@
 (defn focused-session [state]
   (get-in state [:shell-sessions (:focused-session state)]))
 
-(defn members->true [state]
-  "TODO : MOVE TO \"DATA\" NAMESPACE"
-  (as-> state _
-        (get-in _ [:session :members])
-        (map :id _)
-        (zipmap _ (repeat true))))
+
 
 (defn text-thread
   "DEPRECATED:Chronologically ordered text.
@@ -105,12 +117,6 @@
                                                                     #_(ui/squared-btn
                                                                       (str (:focused-session state))
                                                                       :ui.session.settings.open)]}]}]}}})
-
-(defn session-settings [state]
-  (ui/window (get-in state [:ui :session :settings :window])
-             (ui/vbox [(ui/radio-group (members->true state))
-                       (ui/text-entry :ui.session.settings.set-new-id :add-member "Add member")
-                       (ui/squared-btn "OK" :ui.session.settings.close)])))
 
 (defn root [state]
   (ui/many [(session state)
