@@ -82,7 +82,7 @@
 (defn focus-session! [session-id]
   (let [state (state/get)
         session (data/focused-session state)]
-    (when (seq (:pending session))
+    #_(when (seq (:pending session))
       (handler {:event/type :ui.popup.set-content
                 :content (ui/command-confirmation-popup (:pending session))}))
     (state/swap! state/with-focus session-id)))
