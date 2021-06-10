@@ -37,8 +37,6 @@
 (defn focused-session [state]
   (get-in state [:shell-sessions (:focused-session state)]))
 
-
-
 (defn text-thread
   "DEPRECATED:Chronologically ordered text.
   ATM it only prints the last cmd stdout,
@@ -87,11 +85,11 @@
                                                 :text        "<NAME>:<DIR>$"}
                                                {:fx/type  :h-box
 
-                                                :children [{:fx/type         :text-field
-                                                            :style-class     "app-text-field"
-                                                            :prompt-text     "_"
-                                                            :text            (:input state)
-                                                            :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
+                                        :children [{:fx/type :text-field
+                                                    :style-class "app-text-field"
+                                                    :prompt-text "_"
+                                                    :text (get-in state [:ui :session :input])
+                                                    :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
 
                     (ui/squared-btn {:pref-width 30} "⚙" :ui.session.settings.open)])})
 
@@ -105,18 +103,13 @@
              :stylesheets [(::css/url (term-style/style))]
              :root        {:fx/type        :v-box
                            :on-key-pressed {:event/type :keypressed}
-                           :children       [
-                                            {:fx/type  :h-box
+                           :children       [{:fx/type  :h-box
                                              :children [(ui/vbox [(ui/squared-btn {:pref-width 30} "+" :ui.popup.new-session)
                                                                   (ui/sidebar :ui.sidebar.click
                                                                               (keys (walk/stringify-keys
                                                                                       (get state :shell-sessions))))])
                                                         {:fx/type  :v-box
-                                                         :children [(terminal state)
-                                                                    #_(ui/text-entry :ui.session.set-input :execute)
-                                                                    #_(ui/squared-btn
-                                                                      (str (:focused-session state))
-                                                                      :ui.session.settings.open)]}]}]}}})
+                                                         :children [(terminal state)]}]}]}}})
 
 (defn root [state]
   (ui/many [(session state)

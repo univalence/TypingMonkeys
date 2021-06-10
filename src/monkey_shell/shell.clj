@@ -15,7 +15,8 @@
                        {:out (callback-writer
                                (fn [out]
                                  (on-out out)
-                                 (future (when-not (.isAlive (:proc @p))
+                                 (future #_(Thread/sleep 1000)
+                                         (when-not (.isAlive (:proc @p))
                                            (on-dead)))))}))))
 
 

@@ -7,9 +7,9 @@
   (:import [javafx.scene.input KeyCode KeyEvent]))
 
 
-(defn swap-session! [id f]
+(defn swap-session! [id f & args]
   (let [session (state/get [:shell-sessions (keyword id)])
-        next-session (f session)]
+        next-session (apply f session args)]
     (state/swap!_ (assoc-in _ [:shell-sessions id] next-session))
     (db/sync-session! (assoc next-session :id (name id)))))
 
@@ -30,8 +30,8 @@
     (state/swap!_
       (assoc _ :ui {:session {:settings {}}
                     :sidebar {}
-                    :popup   {:content (ui/error-popup)
-                              :props   {:showing false}}}
+                    :popup {:content (ui/error-popup)
+                            :props {:showing false}}}
 
                :user (db/fetch-user user-id)
                :shell-sessions (db/pull-walk sessions))
@@ -47,20 +47,25 @@
         cmd-args (str/split (get-in state [:ui :session :input]) #" ")]
 
     (if (state/host-session? state session-id)
-      (shell/execute cmd-args
-                     (fn [ret]
-                       (swap-session!_ session-id
-                                       (assoc _ :running true)
-                                       (update _ :history #(conj (pop %)
-                                                                 {:cmd-args cmd-args :out ret}))))
-                     (fn []
-                       (swap-session!_ session-id (dissoc _ :running))))
+      (do (swap-session!_ session-id
+                          (assoc _ :running true)
+                          (update _ :history conj {:cmd-args cmd-args :out ""}))
+
+          (shell/execute cmd-args
+                         (fn [ret]
+                           (swap-session!_ session-id
+                                           (update _ :history
+                                                   #(conj (pop %)
+                                                          {:cmd-args cmd-args
+                                                           :out (str (:out (last %)) ret)}))))
+                         (fn []
+                           (swap-session!_ session-id (dissoc _ :running)))))
 
       (swap-session!_ session-id
                       (update _ :pending
                               (fnil conj [])
                               {:cmd-args cmd-args
-                               :from     (get-in state [:user :id])})))))
+                               :from (get-in state [:user :id])})))))
 
 (defn new-session! []
   (state/swap! state/with-new-session
@@ -78,16 +83,20 @@
 
   (case (:event/type event)
 
-    :execute (execute!)
+    :execute (do (execute!)
+                 (handler {:event/type :ui.session.clear-input}))
+
     :new-session (new-session!)
     :add-member (add-member!)
 
     :keypressed (condp = (.getCode ^KeyEvent (:fx/event event))
-                  KeyCode/ENTER (execute!)
+                  KeyCode/ENTER (handler {:event/type :execute})
                   nil)
 
     :ui.session.set-input
     (state/put! [:ui :session :input] (get event :fx/event))
+    :ui.session.clear-input
+    (state/put! [:ui :session :input] nil)
 
     :ui.sidebar.click
     (state/swap! state/with-focus (keyword (get event :click-payload)))
@@ -106,7 +115,7 @@
     :ui.popup.new-session
     (do
       (handler {:event/type :ui.popup.set-content
-                :content    (ui/new-session-popup)})
+                :content (ui/new-session-popup)})
       (handler {:event/type :ui.popup.show}))
 
     :ui.popup.show
