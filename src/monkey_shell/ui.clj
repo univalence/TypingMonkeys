@@ -5,18 +5,7 @@
             [clojure.string :as str]
             [cljfx.css :as css]))
 
-(defn focused-session
-  "TODO move to DATA"
-  [state]
-  (get-in state [:shell-sessions (:focused-session state)]))
 
-(defn members->true [state]
-  "TODO : MOVE TO \"DATA\" NAMESPACE
-  FIXME : not working"
-  (as-> (focused-session state) _
-        (get _ :members)
-        (map :db/id _)
-        (zipmap _ (repeat true))))
 
 (defn error-popup []
   {:fx/type :label
@@ -27,10 +16,13 @@
             (ui/end-popup :ui.popup.confirm-new-session)]))
 
 (defn terminal-settings-popup [state]
-  (ui/vbox [(ui/radio-group (members->true state))
+  (ui/vbox [(ui/radio-group (data/members->true state))
             (ui/end-popup :ui.popup.confirm-new-session)]))
 
 (defn dynamic-popup [state]
+  (println "dynpop"
+           (ui/window (get-in state [:ui :popup :props])
+                      (get-in state [:ui :popup :content])))
   (ui/window (get-in state [:ui :popup :props])
              (get-in state [:ui :popup :content])))
 
@@ -67,14 +59,14 @@
                      :children    [{:fx/type     :label
                                     :style-class "app-code"
                                     :text        (str "<NAME>:<DIR>$ "
-                                                      (str/join " " (-> (focused-session state)
+                                                      (str/join " " (-> (data/focused-session state)
                                                                         :history
                                                                         last
                                                                         :cmd-args))
 
                                                       "\n\n"
 
-                                                      (-> (focused-session state)
+                                                      (-> (data/focused-session state)
                                                           :history last :out str))}
 
                                    {:fx/type  :h-box

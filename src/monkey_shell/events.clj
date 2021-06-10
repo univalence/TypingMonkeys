@@ -3,9 +3,11 @@
             [monkey-shell.state :as state :refer [*state]]
             [monkey-shell.shell :as shell]
             [clojure.string :as str]
-            [monkey-shell.ui :as ui])
+            [monkey-shell.ui :as ui]
+            [monkey-shell.data :as data])
   (:import [javafx.scene.input KeyCode KeyEvent]))
 
+(declare handler)
 
 (defn swap-session! [id f & args]
   (let [session (state/get [:shell-sessions (keyword id)])
@@ -72,10 +74,18 @@
                (keyword (state/get [:ui :session :new-id])))
   (sync-session!))
 
-(defn add-member! []
+(defn add-session-member! []
   (state/swap! state/with-new-session
                (state/get [:ui :session :settings :new-member-id]))
   (sync-session!))
+
+(defn focus-session! [session-id]
+  (let [state (state/get)
+        session (data/focused-session state)]
+    (when (seq (:pending session))
+      (handler {:event/type :ui.popup.set-content
+                :content (ui/command-confirmation-popup (:pending session))}))
+    (state/swap! state/with-focus session-id)))
 
 (defn handler
   [event]
@@ -87,7 +97,10 @@
                  (handler {:event/type :ui.session.clear-input}))
 
     :new-session (new-session!)
-    :add-member (add-member!)
+
+    :session.add-member (add-session-member!)
+
+    :session.focus (focus-session! (get event :session-id))
 
     :keypressed (condp = (.getCode ^KeyEvent (:fx/event event))
                   KeyCode/ENTER (handler {:event/type :execute})
@@ -95,11 +108,13 @@
 
     :ui.session.set-input
     (state/put! [:ui :session :input] (get event :fx/event))
+
     :ui.session.clear-input
     (state/put! [:ui :session :input] nil)
 
     :ui.sidebar.click
-    (state/swap! state/with-focus (keyword (get event :click-payload)))
+    (handler {:event/type :session.focus
+              :session-id (keyword (get event :click-payload))})
 
     :ui.session.settings.open
     (state/put! [:ui :session :settings :window :showing] true)

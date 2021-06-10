@@ -13,6 +13,8 @@
   (-> (f/coll db "shell-sessions")
       (f/filter-contains "members" (f/doc db (str "users/" user-id)))))
 
+#_(defn user-ids [])
+
 (defn pull-walk [x]
   (cond
     (fu/ref? x)

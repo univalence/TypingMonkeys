@@ -14,12 +14,13 @@
     :opts {:fx.opt/map-event-handler events/handler}))
 
 (defonce root
-  (fx/mount-renderer
-    *state
-    renderer))
 
-(events/init! "bastien@univalence.io")
-#_(events/init! "pierrebaille@gmail.com")
+  (do (events/init! "bastien@univalence.io")
+      #_(events/init! "pierrebaille@gmail.com")
+
+      (fx/mount-renderer
+        *state
+        renderer)))
 
 (comment
   (ui/members->true (state/get))
