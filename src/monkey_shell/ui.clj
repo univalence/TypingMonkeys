@@ -5,6 +5,12 @@
             [clojure.string :as str]
             [cljfx.css :as css]))
 
+(defn end-popup
+  "Purpose: confirm or cancel btns"
+  [confirm-event-keyword]
+  (ui/hbox [(ui/squared-btn "Confirm" confirm-event-keyword)
+         (ui/squared-btn "Cancel" :ui.popup.hide)]))
+
 (defn focused-session
   "TODO move to DATA"
   [state]
@@ -24,11 +30,11 @@
 
 (defn new-session-popup []
   (ui/vbox [(ui/text-entry :ui.session.set-new-id :new-session "Add session")
-            (ui/end-popup :ui.popup.confirm-new-session)]))
+            (end-popup :ui.popup.confirm-new-session)]))
 
 (defn terminal-settings-popup [state]
   (ui/vbox [(ui/radio-group (members->true state))
-            (ui/end-popup :ui.popup.confirm-new-session)]))
+            (end-popup :ui.popup.confirm-new-session)]))
 
 (defn dynamic-popup [state]
   (ui/window (get-in state [:ui :popup :props])

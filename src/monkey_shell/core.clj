@@ -8,6 +8,9 @@
   (println "unmounting")
   (fx/unmount-renderer *state renderer))
 
+(events/init! "bastien@univalence.io")
+#_(events/init! "pierrebaille@gmail.com")
+
 (def renderer
   (fx/create-renderer
     :middleware (fx/wrap-map-desc assoc :fx/type ui/root)
@@ -18,8 +21,6 @@
     *state
     renderer))
 
-(events/init! "bastien@univalence.io")
-#_(events/init! "pierrebaille@gmail.com")
 
 (comment
   (ui/members->true (state/get))
