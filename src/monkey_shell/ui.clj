@@ -18,8 +18,7 @@
   "Pending cmd list"
   [state]
   (comps/vbox (mapv pending-cmd
-                    (:pending (data/focused-session state))))
-  )
+                    (:pending (data/focused-session state)))))
 
 (defn end-popup
   "Purpose: confirm or cancel btns"
