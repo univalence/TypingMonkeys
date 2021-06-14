@@ -1,44 +1,51 @@
 (ns monkey-shell.ui
-  (:require [monkey-shell.components.core :as ui]
+  (:require [monkey-shell.components.core :as comps]
             [clojure.walk :as walk]
             [monkey-shell.style.terminal :as term-style]
             [clojure.string :as str]
-            [cljfx.css :as css]))
+            [cljfx.css :as css]
+            [monkey-shell.data :as data]))
+
+(defn pending-cmd
+  "Pending command component"
+  [{:as cmd :keys [cmd-args]}]
+  (comps/hbox [{:fx/type :label
+                :text    (str/join " " cmd-args)}
+               (comps/squared-btn {:text "EXEC"} {:event/type :execute
+                                                  :cmd        cmd-args})]))
+
+(defn pending-cmds
+  "Pending cmd list"
+  [state]
+  (comps/vbox (mapv pending-cmd
+                    (:pending (data/focused-session state))))
+  )
 
 (defn end-popup
   "Purpose: confirm or cancel btns"
   [confirm-event-keyword]
-  (ui/hbox [(ui/squared-btn "Confirm" confirm-event-keyword)
-         (ui/squared-btn "Cancel" :ui.popup.hide)]))
-
-(defn focused-session
-  "TODO move to DATA"
-  [state]
-  (get-in state [:shell-sessions (:focused-session state)]))
-
-(defn members->true [state]
-  "TODO : MOVE TO \"DATA\" NAMESPACE
-  FIXME : not working"
-  (as-> (focused-session state) _
-        (get _ :members)
-        (map :db/id _)
-        (zipmap _ (repeat true))))
+  (comps/hbox [(comps/squared-btn {:text "Confirm"} confirm-event-keyword)
+               (comps/squared-btn {:text "Cancel"} :ui.popup.hide)]))
 
 (defn error-popup []
   {:fx/type :label
    :text    "Error, no content is available"})
 
 (defn new-session-popup []
-  (ui/vbox [(ui/text-entry :ui.session.set-new-id :new-session "Add session")
-            (end-popup :ui.popup.confirm-new-session)]))
+  (comps/vbox [(comps/text-entry :ui.session.set-new-id :new-session "Add session")
+               (end-popup :ui.popup.confirm-new-session)]))
 
 (defn terminal-settings-popup [state]
-  (ui/vbox [(ui/radio-group (members->true state))
-            (end-popup :ui.popup.confirm-new-session)]))
+  (comps/vbox [(comps/radio-group (data/members->true state))
+               (end-popup :ui.popup.confirm-new-session)]))
+
 
 (defn dynamic-popup [state]
-  (ui/window (get-in state [:ui :popup :props])
-             (get-in state [:ui :popup :content])))
+  (println "dynpop"
+           (comps/window (get-in state [:ui :popup :props])
+                         (get-in state [:ui :popup :content])))
+  (comps/window (get-in state [:ui :popup :props])
+                (get-in state [:ui :popup :content])))
 
 
 (defn text-thread
@@ -65,7 +72,7 @@
    :pref-height  400
    :v-box/vgrow  :always
    :fit-to-width true
-   :content      (ui/hbox
+   :content      (comps/hbox
                    {:padding 0
                     :spacing 0}
                    [{:fx/type     :v-box
@@ -73,14 +80,14 @@
                      :children    [{:fx/type     :label
                                     :style-class "app-code"
                                     :text        (str "<NAME>:<DIR>$ "
-                                                      (str/join " " (-> (focused-session state)
+                                                      (str/join " " (-> (data/focused-session state)
                                                                         :history
                                                                         last
                                                                         :cmd-args))
 
                                                       "\n\n"
 
-                                                      (-> (focused-session state)
+                                                      (-> (data/focused-session state)
                                                           :history last :out str))}
 
                                    {:fx/type  :h-box
@@ -95,7 +102,8 @@
                                                             :text            (get-in state [:ui :session :input])
                                                             :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
 
-                    (ui/squared-btn {:pref-width 30} "⚙" :ui.popup.shell-settings)])})
+                    (comps/vbox [(comps/squared-btn {:pref-width 30 :text "⚙"} :ui.popup.shell-settings)
+                                 (pending-cmds state)])])})
 
 
 (defn session [state]
@@ -108,22 +116,14 @@
              :root        {:fx/type        :v-box
                            :on-key-pressed {:event/type :keypressed}
                            :children       [{:fx/type  :h-box
-                                             :children [(ui/vbox [(ui/squared-btn {:pref-width 30} "+" :ui.popup.new-session)
-                                                                  (ui/sidebar :ui.sidebar.click
-                                                                              (keys (walk/stringify-keys
-                                                                                      (get state :shell-sessions))))])
+                                             :children [(comps/vbox [(comps/squared-btn {:pref-width 30 :text "+"} :ui.popup.new-session)
+                                                                     (comps/sidebar :ui.sidebar.click
+                                                                                    (keys (walk/stringify-keys
+                                                                                            (get state :shell-sessions))))])
                                                         {:fx/type  :v-box
                                                          :children [(terminal state)]}]}]}}})
 
-(defn test-window [state]
-  (ui/window (get-in state [:ui :popup :props]) (ui/squared-btn "text" :ui.session.settings.close)))
-
-(defn test-componenet []
-  {:fx/type :label, :text "coucou"}
-  )
 
 (defn root [state]
-  (ui/many [(session state)
-            #_(test-componenet)
-            #_(test-window state)
-            (dynamic-popup state)]))
+  (comps/many [(session state)
+               (dynamic-popup state)]))

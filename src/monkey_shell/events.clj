@@ -3,9 +3,11 @@
             [monkey-shell.state :as state :refer [*state]]
             [monkey-shell.shell :as shell]
             [clojure.string :as str]
-            [monkey-shell.ui :as ui])
+            [monkey-shell.ui :as ui]
+            [monkey-shell.data :as data])
   (:import [javafx.scene.input KeyCode KeyEvent]))
 
+(declare handler)
 
 (defn swap-session! [id f & args]
   (let [session (state/get [:shell-sessions (keyword id)])
@@ -30,8 +32,8 @@
     (state/swap!_
       (assoc _ :ui {:session {:settings {}}
                     :sidebar {}
-                    :popup {:content (ui/error-popup)
-                            :props {:showing false}}}
+                    :popup   {:content (ui/error-popup)
+                              :props   {:showing false}}}
 
                :user (db/fetch-user user-id)
                :shell-sessions (db/pull-walk sessions))
@@ -40,42 +42,55 @@
 (defn sync-session! []
   (db/sync-session! (state/get :session)))
 
-(defn execute! []
 
-  (let [state (state/get)
-        session-id (keyword (:focused-session state))
-        cmd-args (str/split (get-in state [:ui :session :input]) #" ")]
 
-    (if (state/host-session? state session-id)
-      (do (swap-session!_ session-id
-                          (assoc _ :running true)
-                          (update _ :history conj {:cmd-args cmd-args :out ""}))
+(defn execute!
+  ([] (let [state (state/get)
+            cmd-args (str/split (get-in state [:ui :session :input]) #" ")]
+        (execute! cmd-args)))
 
-          (shell/execute cmd-args
-                         (fn [ret]
-                           (swap-session!_ session-id
-                                           (update _ :history
-                                                   #(conj (pop %)
-                                                          {:cmd-args cmd-args
-                                                           :out (str (:out (last %)) ret)}))))
-                         (fn []
-                           (swap-session!_ session-id (dissoc _ :running)))))
+  ([cmd-args]
+   (let [state (state/get)
+         session-id (keyword (:focused-session state))]
 
-      (swap-session!_ session-id
-                      (update _ :pending
-                              (fnil conj [])
-                              {:cmd-args cmd-args
-                               :from (get-in state [:user :id])})))))
+     (if (state/host-session? state session-id)
+       (do (swap-session!_ session-id
+                           (assoc _ :running true)
+                           (update _ :history conj {:cmd-args cmd-args :out ""}))
+
+           (shell/execute cmd-args
+                          (fn [ret]
+                            (swap-session!_ session-id
+                                            (update _ :history
+                                                    #(conj (pop %)
+                                                           {:cmd-args cmd-args
+                                                            :out      (str (:out (last %)) ret)}))))
+                          (fn []
+                            (swap-session!_ session-id (dissoc _ :running)))))
+
+       (swap-session!_ session-id
+                       (update _ :pending
+                               (fnil conj [])
+                               {:cmd-args cmd-args
+                                :from     (get-in state [:user :id])}))))))
 
 (defn new-session! []
   (state/swap! state/with-new-session
                (keyword (state/get [:ui :session :new-id])))
   (sync-session!))
 
-(defn add-member! []
+(defn add-session-member! []
   (state/swap! state/with-new-session
                (state/get [:ui :session :settings :new-member-id]))
   (sync-session!))
+
+(defn focus-session! [session-id]
+  (let [state (state/get)
+        session (data/focused-session state)]
+    #_(when (seq (:pending session))
+        (handler {:event/type :ui.popup.set-content
+                  :content    (ui/command-confirmation-popup (:pending session))}))
+    (state/swap! state/with-focus session-id)))
 
 (defn handler
   [event]
@@ -86,8 +101,12 @@
     :execute (do (execute!)
                  (handler {:event/type :ui.session.clear-input}))
 
+
     :new-session (new-session!)
-    :add-member (add-member!)
+
+    :session.add-member (add-session-member!)
+
+    :session.focus (focus-session! (get event :session-id))
 
     :keypressed (condp = (.getCode ^KeyEvent (:fx/event event))
                   KeyCode/ENTER (handler {:event/type :execute})
@@ -95,11 +114,13 @@
 
     :ui.session.set-input
     (state/put! [:ui :session :input] (get event :fx/event))
+
     :ui.session.clear-input
     (state/put! [:ui :session :input] nil)
 
     :ui.sidebar.click
-    (state/swap! state/with-focus (keyword (get event :click-payload)))
+    (handler {:event/type :session.focus
+              :session-id (keyword (get event :click-payload))})
 
     :ui.session.settings.open
     (state/put! [:ui :session :settings :window :showing] true)
@@ -115,7 +136,7 @@
     :ui.popup.new-session
     (do
       (handler {:event/type :ui.popup.set-content
-                :content (ui/new-session-popup)})
+                :content    (ui/new-session-popup)})
       (handler {:event/type :ui.popup.show}))
 
     :ui.popup.confirm-new-session
@@ -126,7 +147,7 @@
     :ui.popup.shell-settings
     (do
       (handler {:event/type :ui.popup.set-content
-                :content (ui/terminal-settings-popup (state/get))})
+                :content    (ui/terminal-settings-popup (state/get))})
       (handler {:event/type :ui.popup.show}))
 
     :ui.popup.show

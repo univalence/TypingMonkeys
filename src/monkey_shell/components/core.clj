@@ -23,19 +23,17 @@
    (merge {:fx/type  :h-box
            :padding  20
            :spacing  10
-           :children component-vector} props-map)))
+           :children component-vector}
+          props-map)))
 
 (defn squared-btn
   "squared button that return its name on click"
-  ([text on-action-event-keyword]
-   (squared-btn {} text on-action-event-keyword))
-
-  ([props-map text on-action-event-keyword]
-   (merge {:fx/type    :button
-           :text       text
-           :pref-width 150
-           :on-action  {:event/type    on-action-event-keyword
-                        :click-payload text}} props-map)))
+  [props-map click-event]
+  (merge {:fx/type    :button
+          :pref-width 150
+          :on-action  (cond (keyword? click-event) {:event/type click-event}
+                            (map? click-event) click-event)}
+         props-map))
 
 (defn text-entry
   "Text bar with enter button"
@@ -44,12 +42,14 @@
   ([on-text-change-event-keyword on-action-event-keyword text]
    (hbox {} [{:fx/type         :text-field
               :on-text-changed {:event/type on-text-change-event-keyword}}
-             (squared-btn text on-action-event-keyword)])))
+             (squared-btn {:text text} on-action-event-keyword)])))
 
 (defn sidebar
   "Menu-like component (list of buttons)"
   [on-action-event-keyword btn-list]
-  (vbox (mapv #(squared-btn % on-action-event-keyword) btn-list)))
+  (vbox (mapv #(squared-btn {:text %} {:event/type    on-action-event-keyword
+                                       :click-payload %})
+              btn-list)))
 
 (defn window
   "Window component"
@@ -74,9 +74,5 @@
   [id->true?]
   (vbox
     (mapv #(radio-btn (last %) :fixme (first %)) id->true?)))
-
-(defn pending-cmd
-  "Pending command component"
-  [])
 
 
