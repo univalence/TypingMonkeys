@@ -113,11 +113,13 @@
              :root        {:fx/type        :v-box
                            :on-key-pressed {:event/type :keypressed}
                            :children       [{:fx/type  :h-box
+                                             :v-box/vgrow :always
                                              :children [(comps/vbox [(comps/squared-btn {:pref-width 30 :text "+"} :ui.popup.new-session)
                                                                      (comps/sidebar :ui.sidebar.click
                                                                                     (keys (walk/stringify-keys
                                                                                             (get state :shell-sessions))))])
                                                         {:fx/type  :v-box
+                                                         :h-box/hgrow :always
                                                          :children [(terminal state)]}]}]}}})
 
 (defn root [state]
