@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [swap! get set!])
   (:require [clojure.core :as core]
             [monkey-shell.data :as data]
-            [typing-monkeys.utils.misc :as u]
+            [typing-monkeys.utils.misc :as u :refer [pp]]
             [typing-monkeys.utils.firestore :as fu]))
 
 (def *state (atom {}))
@@ -46,8 +46,8 @@
     (with-new-session state)))
 
 (defn host-session? [state session-id]
-  (= (fu/data->ref (:user state))
-     (fu/data->ref (get-in state [:shell-sessions (keyword session-id) :host]))))
+  (= (get-in state [:user :db/id])
+     (get-in state [:shell-sessions (keyword session-id) :host :db/id])))
 
 ;; try
 

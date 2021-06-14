@@ -10,10 +10,10 @@
 (defn vbox
   "Vbox wrapper"
   [component-vector]
-  {:fx/type  :v-box
-   :padding  20
-   :spacing  10
-   :children component-vector})
+  {:fx/type :v-box
+   :padding 20
+   :spacing 10
+   :children (remove nil? component-vector)})
 
 (defn hbox
   "Hbox wrapper"
@@ -23,7 +23,7 @@
    (merge {:fx/type  :h-box
            :padding  20
            :spacing  10
-           :children component-vector}
+           :children (remove nil? component-vector)}
           props-map)))
 
 (defn squared-btn
