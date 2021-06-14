@@ -4,25 +4,22 @@
             [monkey-shell.ui :as ui]
             [cljfx.api :as fx]))
 
-(when-let [renderer (resolve 'renderer)]
-  (println "unmounting")
-  (fx/unmount-renderer *state renderer))
+(def running (atom nil))
 
 (def renderer
   (fx/create-renderer
     :middleware (fx/wrap-map-desc assoc :fx/type ui/root)
     :opts {:fx.opt/map-event-handler events/handler}))
 
-(defonce root
-  (do #_(events/init! "bastien@univalence.io")
-      (events/init! "pierrebaille@gmail.com")
-      (fx/mount-renderer
-        *state
-        renderer)))
+(defn go []
+  (when @running (fx/unmount-renderer *state renderer))
+  (events/init! "bastien@univalence.io")
+  (fx/mount-renderer *state renderer)
+  (reset! running true))
+
+(go)
+
 
 (comment
-  (ui/members->true (state/get))
   (events/handler {:event/type :ui.popup.show})
-  (renderer @*state)
-  (:ui (state/get))
-  (ui/root (state/get)))
+  (renderer (state/get)))

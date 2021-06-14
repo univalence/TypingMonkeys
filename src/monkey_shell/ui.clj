@@ -13,9 +13,9 @@
   (comps/hbox [{:fx/type     :label
                 :style-class "app-pending"
                 :text        (str/join " " cmd-args)}
-               (when (state/host-session? state (:focused-session state))
+               (when (data/host-session? state (:focused-session state))
                  (comps/squared-btn {:pref-width 50 :text "EXEC"} {:event/type :session.pending.exec-cmd
-                                                    :cmd        cmd}))]))
+                                                                   :cmd        cmd}))]))
 
 (defn pending-cmds
   "Pending cmd list"
@@ -35,7 +35,7 @@
 
 (defn new-session-popup []
   (comps/vbox [{:fx/type         :text-field
-                :prompt-text "Type your session name here"
+                :prompt-text     "Type your session name here"
                 :on-text-changed {:event/type :ui.session.set-new-id}}
                (end-popup :ui.popup.confirm-new-session)]))
 
@@ -68,37 +68,37 @@
   "Terminal component"
   [state]
   (comps/hbox
-    {:padding 0
-     :style-class  "app-code"
-     :pref-width   800
-     :pref-height  400
-     :v-box/vgrow  :always
-     :spacing 0}
+    {:padding     0
+     :style-class "app-code"
+     :pref-width  800
+     :pref-height 400
+     :v-box/vgrow :always
+     :spacing     0}
 
-    [{:fx/type      :scroll-pane
-      :vvalue 1.0
-      :style-class  "app-code"
+    [{:fx/type     :scroll-pane
+      :vvalue      1.0
+      :style-class "app-code"
       :h-box/hgrow :always
-      :content {:fx/type     :v-box
+      :content     {:fx/type  :v-box
 
-                :children    [{:fx/type     :label
-                               :style-class "app-code"
-                               :text        (str "<NAME>:<DIR>$ "
-                                                 (str/join " " (-> (data/focused-session state)
-                                                                   :history
-                                                                   last
-                                                                   :cmd-args))
-                                                 "\n\n" (-> (data/focused-session state)
-                                                            :history last :out str))}
-                              {:fx/type  :h-box
-                               :children [{:fx/type     :label
-                                           :style-class "app-code"
-                                           :text        "<NAME>:<DIR>$"}
-                                          {:fx/type :h-box :children [{:fx/type         :text-field
-                                                                       :style-class     "app-text-field"
-                                                                       :prompt-text     "_"
-                                                                       :text            (get-in state [:ui :session :input])
-                                                                       :on-text-changed {:event/type :ui.session.set-input}}]}]}]}}
+                    :children [{:fx/type     :label
+                                :style-class "app-code"
+                                :text        (str "<NAME>:<DIR>$ "
+                                                  (str/join " " (-> (data/focused-session state)
+                                                                    :history
+                                                                    last
+                                                                    :cmd-args))
+                                                  "\n\n" (-> (data/focused-session state)
+                                                             :history last :out str))}
+                               {:fx/type  :h-box
+                                :children [{:fx/type     :label
+                                            :style-class "app-code"
+                                            :text        "<NAME>:<DIR>$"}
+                                           {:fx/type :h-box :children [{:fx/type         :text-field
+                                                                        :style-class     "app-text-field"
+                                                                        :prompt-text     "_"
+                                                                        :text            (get-in state [:ui :session :input])
+                                                                        :on-text-changed {:event/type :ui.session.set-input}}]}]}]}}
 
      (comps/vbox {:alignment :top-right} [(comps/squared-btn {:pref-width 30 :text "⚙"} :ui.popup.shell-settings)
                                           (pending-cmds state)])]))

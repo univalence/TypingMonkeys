@@ -40,7 +40,7 @@
 
                :user (db/fetch-user user-id)
                :shell-sessions (db/pull-walk sessions))
-      (state/with-focus _))))
+      (data/with-focus _))))
 
 (defn sync-session! []
   (db/sync-session! (state/get :session)))
@@ -57,7 +57,7 @@
          session-id (keyword (:focused-session state))
          cmd (assoc cmd :from (get-in state [:user :id]) :id (utils/uuid) :out "")]
 
-     (if (state/host-session? state session-id)
+     (if (data/host-session? state session-id)
        (do (swap-session!_ session-id
                            (assoc _ :running true)
                            (update _ :history conj cmd))
@@ -77,12 +77,12 @@
                                cmd))))))
 
 (defn new-session! []
-  (state/swap! state/with-new-session
+  (state/swap! data/with-new-session
                (keyword (state/get [:ui :session :new-id])))
   (sync-session!))
 
 (defn add-session-member! []
-  (state/swap! state/with-new-session
+  (state/swap! data/with-new-session
                (state/get [:ui :session :settings :new-member-id]))
   (sync-session!))
 
@@ -92,7 +92,7 @@
     #_(when (seq (:pending session))
         (handler {:event/type :ui.popup.set-content
                   :content    (ui/command-confirmation-popup (:pending session))}))
-    (state/swap! state/with-focus session-id)))
+    (state/swap! data/with-focus session-id)))
 
 (defn handler
   [event]
