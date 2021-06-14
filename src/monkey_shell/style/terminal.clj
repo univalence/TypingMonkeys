@@ -58,7 +58,14 @@
                                      "-code"       (merge
                                                      (text 13 :normal)
                                                      {:-fx-font-family "monospace"
-                                                      :-fx-padding     (:app.style/spacing style)})}
+                                                      :-fx-padding     (:app.style/spacing style)})
+
+                                     "-pending"    (merge
+                                                     (text 13 :normal)
+                                                     {:-fx-font-family "monospace"
+                                                      :-fx-text-fill        "#a89732"
+                                                      :-fx-padding     (:app.style/spacing style)})
+                                     }
                      ".scroll-pane" (merge
                                       border
                                       {:-fx-effect            inner-shadow

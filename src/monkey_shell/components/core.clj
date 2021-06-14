@@ -7,13 +7,20 @@
   {:fx/type fx/ext-many
    :desc    component-vector})
 
-(defn vbox
+#_(defn vbox
   "Vbox wrapper"
   [component-vector]
   {:fx/type :v-box
-   :padding 20
-   :spacing 10
    :children (remove nil? component-vector)})
+
+(defn vbox
+  "Vbox wrapper"
+  ([component-vector]
+   (vbox {} component-vector))
+  ([props-map component-vector]
+   (merge {:fx/type  :v-box
+           :children (remove nil? component-vector)}
+          props-map)))
 
 (defn hbox
   "Hbox wrapper"
@@ -21,8 +28,6 @@
    (hbox {} component-vector))
   ([props-map component-vector]
    (merge {:fx/type  :h-box
-           :padding  20
-           :spacing  10
            :children (remove nil? component-vector)}
           props-map)))
 
