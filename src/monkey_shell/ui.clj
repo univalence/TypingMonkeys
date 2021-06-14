@@ -1,51 +1,31 @@
 (ns monkey-shell.ui
-  (:require [monkey-shell.components.core :as comps]
+  (:require [monkey-shell.components.core :as ui]
             [clojure.walk :as walk]
             [monkey-shell.style.terminal :as term-style]
             [clojure.string :as str]
             [cljfx.css :as css]
             [monkey-shell.data :as data]))
 
-(defn pending-cmd
-  "Pending command component"
-  [{:as cmd :keys [cmd-args]}]
-  (comps/hbox [{:fx/type :label
-                :text    (str/join " " cmd-args)}
-               (comps/squared-btn {:text "EXEC"} {:event/type :execute
-                                                  :cmd        cmd-args})]))
 
-(defn pending-cmds
-  "Pending cmd list"
-  [state]
-  (comps/vbox (mapv pending-cmd
-                    (:pending (data/focused-session state))))
-  )
-
-(defn end-popup
-  "Purpose: confirm or cancel btns"
-  [confirm-event-keyword]
-  (comps/hbox [(comps/squared-btn {:text "Confirm"} confirm-event-keyword)
-               (comps/squared-btn {:text "Cancel"} :ui.popup.hide)]))
 
 (defn error-popup []
   {:fx/type :label
    :text    "Error, no content is available"})
 
 (defn new-session-popup []
-  (comps/vbox [(comps/text-entry :ui.session.set-new-id :new-session "Add session")
-               (end-popup :ui.popup.confirm-new-session)]))
+  (ui/vbox [(ui/text-entry :ui.session.set-new-id :new-session "Add session")
+            (ui/end-popup :ui.popup.confirm-new-session)]))
 
 (defn terminal-settings-popup [state]
-  (comps/vbox [(comps/radio-group (data/members->true state))
-               (end-popup :ui.popup.confirm-new-session)]))
-
+  (ui/vbox [(ui/radio-group (data/members->true state))
+            (ui/end-popup :ui.popup.confirm-new-session)]))
 
 (defn dynamic-popup [state]
   (println "dynpop"
-           (comps/window (get-in state [:ui :popup :props])
-                         (get-in state [:ui :popup :content])))
-  (comps/window (get-in state [:ui :popup :props])
-                (get-in state [:ui :popup :content])))
+           (ui/window (get-in state [:ui :popup :props])
+                      (get-in state [:ui :popup :content])))
+  (ui/window (get-in state [:ui :popup :props])
+             (get-in state [:ui :popup :content])))
 
 
 (defn text-thread
@@ -72,7 +52,7 @@
    :pref-height  400
    :v-box/vgrow  :always
    :fit-to-width true
-   :content      (comps/hbox
+   :content      (ui/hbox
                    {:padding 0
                     :spacing 0}
                    [{:fx/type     :v-box
@@ -102,8 +82,7 @@
                                                             :text            (get-in state [:ui :session :input])
                                                             :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
 
-                    (comps/vbox [(comps/squared-btn {:pref-width 30 :text "⚙"} :ui.popup.shell-settings)
-                                 (pending-cmds state)])])})
+                    (ui/squared-btn {:pref-width 30} "⚙" :ui.popup.shell-settings)])})
 
 
 (defn session [state]
@@ -116,14 +95,22 @@
              :root        {:fx/type        :v-box
                            :on-key-pressed {:event/type :keypressed}
                            :children       [{:fx/type  :h-box
-                                             :children [(comps/vbox [(comps/squared-btn {:pref-width 30 :text "+"} :ui.popup.new-session)
-                                                                     (comps/sidebar :ui.sidebar.click
-                                                                                    (keys (walk/stringify-keys
-                                                                                            (get state :shell-sessions))))])
+                                             :children [(ui/vbox [(ui/squared-btn {:pref-width 30} "+" :ui.popup.new-session)
+                                                                  (ui/sidebar :ui.sidebar.click
+                                                                              (keys (walk/stringify-keys
+                                                                                      (get state :shell-sessions))))])
                                                         {:fx/type  :v-box
                                                          :children [(terminal state)]}]}]}}})
 
+(defn test-window [state]
+  (ui/window (get-in state [:ui :popup :props]) (ui/squared-btn "text" :ui.session.settings.close)))
+
+(defn test-componenet []
+  {:fx/type :label, :text "coucou"}
+  )
 
 (defn root [state]
-  (comps/many [(session state)
-               (dynamic-popup state)]))
+  (ui/many [(session state)
+            #_(test-componenet)
+            #_(test-window state)
+            (dynamic-popup state)]))
