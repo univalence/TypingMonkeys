@@ -50,20 +50,14 @@
   (comps/window (get-in state [:ui :popup :props])
                 (get-in state [:ui :popup :content])))
 
-(defn text-thread
-  "DEPRECATED:Chronologically ordered text.
-  ATM it only prints the last cmd stdout,
-  TODO print full history "
-  [state]
-  {:fx/type      :scroll-pane
-   :pref-width   400
-   :pref-height  400
-   :v-box/vgrow  :always
-   :fit-to-width true
-   :content      {:fx/type  :v-box
-                  :children [{:fx/type :text
-                              :text    (-> (get-in state [:session :history])
-                                           last :out str)}]}})
+(defn cmds->terminal-string [cmds]
+  (reduce (fn [s {:as cmd :keys [cmd-args out]}]
+            (str s "\n<NAME>:<DIR>$ "
+                 (str/join " " cmd-args)
+                 "\n\n" out))
+          ""
+          cmds))
+
 (defn terminal
   "Terminal component"
   [state]
@@ -83,13 +77,7 @@
 
                     :children [{:fx/type     :label
                                 :style-class "app-code"
-                                :text        (str "<NAME>:<DIR>$ "
-                                                  (str/join " " (-> (data/focused-session state)
-                                                                    :history
-                                                                    last
-                                                                    :cmd-args))
-                                                  "\n\n" (-> (data/focused-session state)
-                                                             :history last :out str))}
+                                :text        (cmds->terminal-string (take-last 10 (:history (data/focused-session state))))}
                                {:fx/type  :h-box
                                 :children [{:fx/type     :label
                                             :style-class "app-code"
