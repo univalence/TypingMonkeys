@@ -47,54 +47,42 @@
   (comps/window (get-in state [:ui :popup :props])
                 (get-in state [:ui :popup :content])))
 
-(defn text-thread
-  "DEPRECATED:Chronologically ordered text.
-  ATM it only prints the last cmd stdout,
-  TODO print full history "
-  [state]
-  {:fx/type      :scroll-pane
-   :pref-width   400
-   :pref-height  400
-   :v-box/vgrow  :always
-   :fit-to-width true
-   :content      {:fx/type  :v-box
-                  :children [{:fx/type :text
-                              :text    (-> (get-in state [:session :history])
-                                           last :out str)}]}})
+(defn cmds->terminal-string [cmds]
+  (reduce (fn [s {:as cmd :keys [cmd-args out]}]
+            (str s "\n<NAME>:<DIR>$ "
+                 (str/join " " cmd-args)
+                 "\n\n" out))
+          ""
+          cmds))
+
 (defn terminal
   "Terminal component"
   [state]
-  {:fx/type      :scroll-pane
-   :style-class  "app-code"
-   :pref-width   800
-   :pref-height  400
-   :v-box/vgrow  :always
+  {:fx/type :scroll-pane
+   :style-class "app-code"
+   :pref-width 800
+   :pref-height 400
+   :v-box/vgrow :always
    :fit-to-width true
-   :content      (comps/hbox
-                   {:padding 0
-                    :spacing 0}
-                   [{:fx/type     :v-box
-                     :h-box/hgrow :always
-                     :children    [{:fx/type     :label
-                                    :style-class "app-code"
-                                    :text        (str "<NAME>:<DIR>$ "
-                                                      (str/join " " (-> (data/focused-session state)
-                                                                        :history
-                                                                        last
-                                                                        :cmd-args))
-                                                      "\n\n" (-> (data/focused-session state)
-                                                                 :history last :out str))}
-                                   {:fx/type  :h-box
-                                    :children [{:fx/type     :label
-                                                :style-class "app-code"
-                                                :text        "<NAME>:<DIR>$"}
-                                               {:fx/type :h-box :children [{:fx/type         :text-field
-                                                                            :style-class     "app-text-field"
-                                                                            :prompt-text     "_"
-                                                                            :text            (get-in state [:ui :session :input])
-                                                                            :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
-                    (comps/vbox [(comps/squared-btn {:pref-width 30 :text "⚙"} :ui.popup.shell-settings)
-                                 (pending-cmds state)])])})
+   :content (comps/hbox
+              {:padding 0
+               :spacing 0}
+              [{:fx/type :v-box
+                :h-box/hgrow :always
+                :children [{:fx/type :label
+                            :style-class "app-code"
+                            :text (cmds->terminal-string (take-last 10 (:history (data/focused-session state))))}
+                           {:fx/type :h-box
+                            :children [{:fx/type :label
+                                        :style-class "app-code"
+                                        :text "<NAME>:<DIR>$"}
+                                       {:fx/type :h-box :children [{:fx/type :text-field
+                                                                    :style-class "app-text-field"
+                                                                    :prompt-text "_"
+                                                                    :text (get-in state [:ui :session :input])
+                                                                    :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
+               (comps/vbox [(comps/squared-btn {:pref-width 30 :text "⚙"} :ui.popup.shell-settings)
+                            (pending-cmds state)])])})
 
 (defn session [state]
   {:fx/type :stage
