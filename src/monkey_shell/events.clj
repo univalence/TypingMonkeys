@@ -4,7 +4,8 @@
             [monkey-shell.shell :as shell]
             [clojure.string :as str]
             [monkey-shell.ui :as ui]
-            [monkey-shell.data :as data])
+            [monkey-shell.data :as data]
+            [typing-monkeys.utils.misc :as utils])
   (:import [javafx.scene.input KeyCode KeyEvent]))
 
 (declare handler)
@@ -50,20 +51,22 @@
         (execute! cmd-args)))
 
   ([cmd-args]
-   (let [state (state/get)
+   (let [uuid (utils/uuid)
+         state (state/get)
          session-id (keyword (:focused-session state))]
 
      (if (state/host-session? state session-id)
        (do (swap-session!_ session-id
                            (assoc _ :running true)
-                           (update _ :history conj {:cmd-args cmd-args :out ""}))
+                           (update _ :history conj {:id uuid :cmd-args cmd-args :out ""}))
 
            (shell/execute cmd-args
                           (fn [ret]
                             (swap-session!_ session-id
                                             (update _ :history
                                                     #(conj (pop %)
-                                                           {:cmd-args cmd-args
+                                                           {:id       uuid
+                                                            :cmd-args cmd-args
                                                             :out      (str (:out (last %)) ret)}))))
                           (fn []
                             (swap-session!_ session-id (dissoc _ :running)))))
@@ -71,7 +74,8 @@
        (swap-session!_ session-id
                        (update _ :pending
                                (fnil conj [])
-                               {:cmd-args cmd-args
+                               {:id       uuid
+                                :cmd-args cmd-args
                                 :from     (get-in state [:user :id])}))))))
 
 (defn new-session! []
@@ -99,7 +103,9 @@
   (case (:event/type event)
 
     :session.pending.exec-cmd
-    (execute! (:cmd event))
+    (do
+      (execute! (get-in event [:cmd :cmd-args]))
+      (state/swap! data/remove-pending-cmd (get-in event [:cmd :id])))
 
 
     :execute (do (execute!)

@@ -2,10 +2,18 @@
 
 (defn new-session
   [id user]
-  {:id id
-   :host user
+  {:id      id
+   :host    user
    :members [user]
    :history []})
+
+(defn
+  remove-pending-cmd
+  ""
+  [state cmd-id]
+  (update-in state [:shell-sessions (:focused-session state) :pending]
+             (fn [cmds]
+               (vec (remove #(= cmd-id (:id %)) cmds)))))
 
 (defn focused-session
   "TODO move to DATA"

@@ -12,7 +12,7 @@
   (comps/hbox [{:fx/type :label
                 :text    (str/join " " cmd-args)}
                (comps/squared-btn {:text "EXEC"} {:event/type :session.pending.exec-cmd
-                                                  :cmd        cmd-args})]))
+                                                  :cmd        cmd})]))
 
 (defn pending-cmds
   "Pending cmd list"

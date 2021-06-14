@@ -1,7 +1,10 @@
 (ns typing-monkeys.utils.misc
   (:refer-clojure :exclude [key get set])
   (:require [clojure.walk :as walk]
-            [clojure.string :as string]))
+            [clojure.string :as string])
+  (:import (java.util UUID)))
+
+(defn uuid [] (str (UUID/randomUUID)))
 
 (do :misc
     (def catv (comp vec concat))
