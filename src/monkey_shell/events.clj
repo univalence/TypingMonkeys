@@ -98,6 +98,10 @@
 
   (case (:event/type event)
 
+    :session.pending.exec-cmd
+    (execute! (:cmd event))
+
+
     :execute (do (execute!)
                  (handler {:event/type :ui.session.clear-input}))
 

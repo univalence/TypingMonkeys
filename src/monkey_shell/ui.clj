@@ -10,9 +10,9 @@
   "Pending command component"
   [{:as cmd :keys [cmd-args]}]
   (comps/hbox [{:fx/type :label
-                :text (str/join " " cmd-args)}
-               (comps/squared-btn {:text "EXEC"} {:event/type :execute
-                                                  :cmd cmd-args})]))
+                :text    (str/join " " cmd-args)}
+               (comps/squared-btn {:text "EXEC"} {:event/type :session.pending.exec-cmd
+                                                  :cmd        cmd-args})]))
 
 (defn pending-cmds
   "Pending cmd list"
@@ -28,7 +28,7 @@
 
 (defn error-popup []
   {:fx/type :label
-   :text "Error, no content is available"})
+   :text    "Error, no content is available"})
 
 (defn new-session-popup []
   (comps/vbox [(comps/text-entry :ui.session.set-new-id :new-session "Add session")
@@ -50,66 +50,66 @@
   ATM it only prints the last cmd stdout,
   TODO print full history "
   [state]
-  {:fx/type :scroll-pane
-   :pref-width 400
-   :pref-height 400
-   :v-box/vgrow :always
+  {:fx/type      :scroll-pane
+   :pref-width   400
+   :pref-height  400
+   :v-box/vgrow  :always
    :fit-to-width true
-   :content {:fx/type :v-box
-             :children [{:fx/type :text
-                         :text (-> (get-in state [:session :history])
-                                   last :out str)}]}})
+   :content      {:fx/type  :v-box
+                  :children [{:fx/type :text
+                              :text    (-> (get-in state [:session :history])
+                                           last :out str)}]}})
 (defn terminal
   "Terminal component"
   [state]
-  {:fx/type :scroll-pane
-   :style-class "app-code"
-   :pref-width 800
-   :pref-height 400
-   :v-box/vgrow :always
+  {:fx/type      :scroll-pane
+   :style-class  "app-code"
+   :pref-width   800
+   :pref-height  400
+   :v-box/vgrow  :always
    :fit-to-width true
-   :content (comps/hbox
-              {:padding 0
-               :spacing 0}
-              [{:fx/type :v-box
-                :h-box/hgrow :always
-                :children [{:fx/type :label
-                            :style-class "app-code"
-                            :text (str "<NAME>:<DIR>$ "
-                                       (str/join " " (-> (data/focused-session state)
-                                                         :history
-                                                         last
-                                                         :cmd-args))
-                                       "\n\n" (-> (data/focused-session state)
-                                                  :history last :out str))}
-                           {:fx/type :h-box
-                            :children [{:fx/type :label
-                                        :style-class "app-code"
-                                        :text "<NAME>:<DIR>$"}
-                                       {:fx/type :h-box :children [{:fx/type :text-field
-                                                                    :style-class "app-text-field"
-                                                                    :prompt-text "_"
-                                                                    :text (get-in state [:ui :session :input])
-                                                                    :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
-               (comps/vbox [(comps/squared-btn {:pref-width 30 :text "⚙"} :ui.popup.shell-settings)
-                            (pending-cmds state)])])})
+   :content      (comps/hbox
+                   {:padding 0
+                    :spacing 0}
+                   [{:fx/type     :v-box
+                     :h-box/hgrow :always
+                     :children    [{:fx/type     :label
+                                    :style-class "app-code"
+                                    :text        (str "<NAME>:<DIR>$ "
+                                                      (str/join " " (-> (data/focused-session state)
+                                                                        :history
+                                                                        last
+                                                                        :cmd-args))
+                                                      "\n\n" (-> (data/focused-session state)
+                                                                 :history last :out str))}
+                                   {:fx/type  :h-box
+                                    :children [{:fx/type     :label
+                                                :style-class "app-code"
+                                                :text        "<NAME>:<DIR>$"}
+                                               {:fx/type :h-box :children [{:fx/type         :text-field
+                                                                            :style-class     "app-text-field"
+                                                                            :prompt-text     "_"
+                                                                            :text            (get-in state [:ui :session :input])
+                                                                            :on-text-changed {:event/type :ui.session.set-input}}]}]}]}
+                    (comps/vbox [(comps/squared-btn {:pref-width 30 :text "⚙"} :ui.popup.shell-settings)
+                                 (pending-cmds state)])])})
 
 (defn session [state]
   {:fx/type :stage
    :showing true
-   :width 1050
-   :height 600
-   :scene {:fx/type :scene
-           :stylesheets [(::css/url (term-style/style))]
-           :root {:fx/type :v-box
-                  :on-key-pressed {:event/type :keypressed}
-                  :children [{:fx/type :h-box
-                              :children [(comps/vbox [(comps/squared-btn {:pref-width 30 :text "+"} :ui.popup.new-session)
-                                                      (comps/sidebar :ui.sidebar.click
-                                                                     (keys (walk/stringify-keys
-                                                                             (get state :shell-sessions))))])
-                                         {:fx/type :v-box
-                                          :children [(terminal state)]}]}]}}})
+   :width   1050
+   :height  600
+   :scene   {:fx/type     :scene
+             :stylesheets [(::css/url (term-style/style))]
+             :root        {:fx/type        :v-box
+                           :on-key-pressed {:event/type :keypressed}
+                           :children       [{:fx/type  :h-box
+                                             :children [(comps/vbox [(comps/squared-btn {:pref-width 30 :text "+"} :ui.popup.new-session)
+                                                                     (comps/sidebar :ui.sidebar.click
+                                                                                    (keys (walk/stringify-keys
+                                                                                            (get state :shell-sessions))))])
+                                                        {:fx/type  :v-box
+                                                         :children [(terminal state)]}]}]}}})
 
 (defn root [state]
   (comps/many [(session state)

@@ -8,8 +8,8 @@
   (println "unmounting")
   (fx/unmount-renderer *state renderer))
 
-(events/init! "bastien@univalence.io")
-#_(events/init! "pierrebaille@gmail.com")
+#_(events/init! "bastien@univalence.io")
+(events/init! "pierrebaille@gmail.com")
 
 (def renderer
   (fx/create-renderer
