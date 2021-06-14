@@ -12,7 +12,7 @@
   [state {:as cmd :keys [cmd-args]}]
   (comps/hbox [{:fx/type :label
                 :text    (str/join " " cmd-args)}
-               (when (state/host-session? state (:focused-session state))
+               (when (data/host-session? state (:focused-session state))
                  (comps/squared-btn {:text "EXEC"} {:event/type :session.pending.exec-cmd
                                                     :cmd        cmd}))]))
 
