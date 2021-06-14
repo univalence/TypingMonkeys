@@ -4,20 +4,24 @@
             [monkey-shell.style.terminal :as term-style]
             [clojure.string :as str]
             [cljfx.css :as css]
-            [monkey-shell.data :as data]))
+            [monkey-shell.data :as data]
+            [monkey-shell.state :as state]))
 
 (defn pending-cmd
   "Pending command component"
-  [{:as cmd :keys [cmd-args]}]
+  [state {:as cmd :keys [cmd-args]}]
   (comps/hbox [{:fx/type :label
                 :text    (str/join " " cmd-args)}
-               (comps/squared-btn {:text "EXEC"} {:event/type :session.pending.exec-cmd
-                                                  :cmd        cmd})]))
+               (when (state/host-session? state (:focused-session state))
+                 (println (state/host-session? state (:focused-session state))) #_removeme
+                 (comps/squared-btn {:text "EXEC"} {:event/type :session.pending.exec-cmd
+                                                    :cmd        cmd}))]))
 
 (defn pending-cmds
   "Pending cmd list"
   [state]
   (comps/vbox (mapv pending-cmd
+                    state
                     (:pending (data/focused-session state)))))
 
 (defn end-popup

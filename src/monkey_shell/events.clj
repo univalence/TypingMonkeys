@@ -48,35 +48,31 @@
 (defn execute!
   ([] (let [state (state/get)
             cmd-args (str/split (get-in state [:ui :session :input]) #" ")]
-        (execute! cmd-args)))
+        (execute! {:cmd-args cmd-args})))
 
-  ([cmd-args]
-   (let [uuid (utils/uuid)
-         state (state/get)
-         session-id (keyword (:focused-session state))]
+  ([{:as cmd :keys [cmd-args]}]
+   (let [state (state/get)
+         session-id (keyword (:focused-session state))
+         cmd (assoc cmd :from (get-in state [:user :id]) :id (utils/uuid) :out "")]
 
      (if (state/host-session? state session-id)
        (do (swap-session!_ session-id
                            (assoc _ :running true)
-                           (update _ :history conj {:id uuid :cmd-args cmd-args :out ""}))
+                           (update _ :history conj cmd))
 
            (shell/execute cmd-args
                           (fn [ret]
                             (swap-session!_ session-id
                                             (update _ :history
                                                     #(conj (pop %)
-                                                           {:id       uuid
-                                                            :cmd-args cmd-args
-                                                            :out      (str (:out (last %)) ret)}))))
+                                                           (assoc cmd :out (str (:out (last %)) ret))))))
                           (fn []
                             (swap-session!_ session-id (dissoc _ :running)))))
 
        (swap-session!_ session-id
                        (update _ :pending
                                (fnil conj [])
-                               {:id       uuid
-                                :cmd-args cmd-args
-                                :from     (get-in state [:user :id])}))))))
+                               cmd))))))
 
 (defn new-session! []
   (state/swap! state/with-new-session
@@ -104,7 +100,7 @@
 
     :session.pending.exec-cmd
     (do
-      (execute! (get-in event [:cmd :cmd-args]))
+      (execute! (:cmd event))
       (state/swap! data/remove-pending-cmd (get-in event [:cmd :id])))
 
 
