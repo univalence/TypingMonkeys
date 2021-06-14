@@ -34,7 +34,9 @@
       (assoc _ :ui {:session {:settings {}}
                     :sidebar {}
                     :popup   {:content (ui/error-popup)
-                              :props   {:showing false}}}
+                              :props   {:showing false
+                                        :always-on-top true
+                                        :style :undecorated}}}
 
                :user (db/fetch-user user-id)
                :shell-sessions (db/pull-walk sessions))

@@ -14,8 +14,8 @@
     :opts {:fx.opt/map-event-handler events/handler}))
 
 (defonce root
-  (do (events/init! "bastien@univalence.io")
-      #_(events/init! "pierrebaille@gmail.com")
+  (do #_(events/init! "bastien@univalence.io")
+      (events/init! "pierrebaille@gmail.com")
       (fx/mount-renderer
         *state
         renderer)))
