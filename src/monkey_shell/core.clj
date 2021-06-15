@@ -12,13 +12,12 @@
     :opts {:fx.opt/map-event-handler events/handler}))
 
 (defn go []
-  (when @running (fx/unmount-renderer *state renderer))
-  (events/init! "bastien@univalence.io")
-  (fx/mount-renderer *state renderer)
-  (reset! running true))
+  (when-not @running
+    (events/init! "pierrebaille@gmail.com")
+    (fx/mount-renderer *state #'renderer)
+    (reset! running true)))
 
 (go)
-
 
 (comment
   (events/handler {:event/type :ui.popup.show})

@@ -5,7 +5,8 @@
             [clojure.string :as str]
             [cljfx.css :as css]
             [monkey-shell.data :as data]
-            [monkey-shell.state :as state]))
+            [monkey-shell.state :as state]
+            [monkey-shell.shell :as shell]))
 
 (defn pending-cmd
   "Pending command component"
@@ -44,15 +45,12 @@
                (end-popup :ui.popup.confirm-new-session)]))
 
 (defn dynamic-popup [state]
-  (println "dynpop"
-           (comps/window (get-in state [:ui :popup :props])
-                         (get-in state [:ui :popup :content])))
   (comps/window (get-in state [:ui :popup :props])
                 (get-in state [:ui :popup :content])))
 
 (defn cmds->terminal-string [cmds]
-  (reduce (fn [s {:as cmd :keys [cmd-args out]}]
-            (str s "\n<NAME>:<DIR>$ "
+  (reduce (fn [s {:as cmd :keys [cmd-args out dir user]}]
+            (str s "\n" (shell/prompt-string user dir)
                  (str/join " " cmd-args)
                  "\n\n" out))
           ""
@@ -62,31 +60,31 @@
   "Terminal component"
   [state]
   (comps/hbox
-    {:padding     0
+    {:padding 0
      :style-class "app-code"
-     :pref-width  800
+     :pref-width 800
      :pref-height 400
      :v-box/vgrow :always
-     :spacing     0}
+     :spacing 0}
 
-    [{:fx/type     :scroll-pane
-      :vvalue      1.0
+    [{:fx/type :scroll-pane
+      :vvalue 1.0
       :style-class "app-code"
       :h-box/hgrow :always
-      :content     {:fx/type  :v-box
+      :content {:fx/type :v-box
 
-                    :children [{:fx/type     :label
-                                :style-class "app-code"
-                                :text        (cmds->terminal-string (take-last 10 (:history (data/focused-session state))))}
-                               {:fx/type  :h-box
-                                :children [{:fx/type     :label
-                                            :style-class "app-code"
-                                            :text        "<NAME>:<DIR>$"}
-                                           {:fx/type :h-box :children [{:fx/type         :text-field
-                                                                        :style-class     "app-text-field"
-                                                                        :prompt-text     "_"
-                                                                        :text            (get-in state [:ui :session :input])
-                                                                        :on-text-changed {:event/type :ui.session.set-input}}]}]}]}}
+                :children [{:fx/type :label
+                            :style-class "app-code"
+                            :text (cmds->terminal-string (take-last 10 (:history (data/focused-session state))))}
+                           {:fx/type :h-box
+                            :children [{:fx/type :label
+                                        :style-class "app-code"
+                                        :text (shell/prompt-string)}
+                                       {:fx/type :h-box :children [{:fx/type :text-field
+                                                                    :style-class "app-text-field"
+                                                                    :prompt-text "_"
+                                                                    :text (get-in state [:ui :session :input])
+                                                                    :on-text-changed {:event/type :ui.session.set-input}}]}]}]}}
 
      (comps/vbox {:alignment :top-right} [(comps/squared-btn {:pref-width 30 :text "⚙"} :ui.popup.shell-settings)
                                           (pending-cmds state)])]))
