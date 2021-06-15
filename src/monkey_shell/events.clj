@@ -45,8 +45,6 @@
 (defn sync-session! []
   (db/sync-session! (state/get :session)))
 
-
-
 (defn execute!
   ([] (let [state (state/get)
             cmd-args (str/split (get-in state [:ui :session :input]) #" ")]
@@ -55,7 +53,11 @@
   ([{:as cmd :keys [cmd-args]}]
    (let [state (state/get)
          session-id (keyword (:focused-session state))
-         cmd (assoc cmd :from (get-in state [:user :id]) :id (utils/uuid) :out "")]
+         cmd (merge cmd
+                    (shell/context)
+                    {:from (get-in state [:user :id])
+                     :id (utils/uuid)
+                     :out ""})]
 
      (if (data/host-session? state session-id)
        (do (swap-session!_ session-id
