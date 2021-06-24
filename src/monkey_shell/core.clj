@@ -2,7 +2,8 @@
   (:require [monkey-shell.state :as state :refer [*state]]
             [monkey-shell.events :as events]
             [monkey-shell.ui :as ui]
-            [cljfx.api :as fx]))
+            [cljfx.api :as fx]
+            [monkey-shell.data :as data]))
 
 (def running (atom nil))
 
@@ -14,6 +15,7 @@
 (defn go []
   (when-not @running
     (events/init! "pierrebaille@gmail.com")
+    #_(events/init! "bastien@univalence.io")
     (fx/mount-renderer *state #'renderer)
     (reset! running true)))
 
@@ -21,4 +23,5 @@
 
 (comment
   (events/handler {:event/type :ui.popup.show})
-  (renderer (state/get)))
+  (renderer (state/get))
+  (count (get-in (state/get) [:shell-sessions (get (state/get) :focused-session) :pending])))

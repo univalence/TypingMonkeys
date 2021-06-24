@@ -63,8 +63,15 @@
                                      "-pending"    (merge
                                                      (text 13 :normal)
                                                      {:-fx-font-family "monospace"
-                                                      :-fx-text-fill        "#a89732"
+                                                      :-fx-text-fill   "#a89732"
                                                       :-fx-padding     (:app.style/spacing style)})
+                                     "-term-btn"   (merge
+                                                     button
+                                                     {:-fx-background-color "transparent"
+                                                      :-fx-alignment "center"
+                                                      ":hover"              {:-fx-effect           hover-shadow
+                                                                             :-fx-background-color "#a89732"}}
+                                                     )
                                      }
                      ".scroll-pane" (merge
                                       border

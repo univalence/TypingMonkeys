@@ -167,4 +167,11 @@
     (state/put! [:ui :popup :props :showing] false)
 
     :ui.popup.set-content
-    (state/put! [:ui :popup :content] (:content event))))
+    (state/put! [:ui :popup :content] (:content event))
+
+    :ui.terminal.toggle-show-pending-cmds
+    (state/put! [:ui :pending-cmds-showing] (not (state/get [:ui :pending-cmds-showing])))
+
+
+
+    ))

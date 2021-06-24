@@ -43,3 +43,6 @@
 (defn host-session? [state session-id]
   (= (get-in state [:user :db/id])
      (get-in state [:shell-sessions (keyword session-id) :host :db/id])))
+
+(defn count-pending-cmds [state]
+  (count (get-in state [:shell-sessions (get state :focused-session) :pending])))

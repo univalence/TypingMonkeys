@@ -11,18 +11,20 @@
 (defn pending-cmd
   "Pending command component"
   [state {:as cmd :keys [cmd-args]}]
-  (comps/hbox [{:fx/type     :label
+  (comps/hbox [(when (data/host-session? state (:focused-session state))
+                 (comps/squared-btn {:pref-width 50 :text "▶︎" :style-class "app-term-btn"}
+                                    {:event/type :session.pending.exec-cmd
+                                     :cmd        cmd}))
+               {:fx/type     :label
                 :style-class "app-pending"
-                :text        (str/join " " cmd-args)}
-               (when (data/host-session? state (:focused-session state))
-                 (comps/squared-btn {:pref-width 50 :text "EXEC"} {:event/type :session.pending.exec-cmd
-                                                                   :cmd        cmd}))]))
+                :text        (str/join " " cmd-args)}]))
 
 (defn pending-cmds
   "Pending cmd list"
   [state]
-  (comps/vbox (mapv (partial pending-cmd state)
-                    (:pending (data/focused-session state)))))
+  (when (= true (get-in state [:ui :pending-cmds-showing]))
+    (comps/vbox (mapv (partial pending-cmd state)
+                    (:pending (data/focused-session state))))))
 
 (defn end-popup
   "Purpose: confirm or cancel btns"
@@ -60,33 +62,40 @@
   "Terminal component"
   [state]
   (comps/hbox
-    {:padding 0
+    {:padding     0
      :style-class "app-code"
-     :pref-width 800
+     :pref-width  800
      :pref-height 400
      :v-box/vgrow :always
-     :spacing 0}
+     :spacing     0}
 
-    [{:fx/type :scroll-pane
-      :vvalue 1.0
+    [{:fx/type     :scroll-pane
+      :vvalue      1.0
       :style-class "app-code"
       :h-box/hgrow :always
-      :content {:fx/type :v-box
+      :content     {:fx/type  :v-box
 
-                :children [{:fx/type :label
-                            :style-class "app-code"
-                            :text (cmds->terminal-string (take-last 10 (:history (data/focused-session state))))}
-                           {:fx/type :h-box
-                            :children [{:fx/type :label
-                                        :style-class "app-code"
-                                        :text (shell/prompt-string)}
-                                       {:fx/type :h-box :children [{:fx/type :text-field
-                                                                    :style-class "app-text-field"
-                                                                    :prompt-text "_"
-                                                                    :text (get-in state [:ui :session :input])
-                                                                    :on-text-changed {:event/type :ui.session.set-input}}]}]}]}}
+                    :children [{:fx/type     :label
+                                :style-class "app-code"
+                                :text        (cmds->terminal-string (take-last 10 (:history (data/focused-session state))))}
+                               {:fx/type  :h-box
+                                :children [{:fx/type     :label
+                                            :style-class "app-code"
+                                            :text        (shell/prompt-string)}
+                                           {:fx/type :h-box :children [{:fx/type         :text-field
+                                                                        :style-class     "app-text-field"
+                                                                        :prompt-text     "_"
+                                                                        :text            (get-in state [:ui :session :input])
+                                                                        :on-text-changed {:event/type :ui.session.set-input}}]}]}]}}
 
-     (comps/vbox {:alignment :top-right} [(comps/squared-btn {:pref-width 30 :text "⚙"} :ui.popup.shell-settings)
+     (comps/vbox {:alignment :top-right :min-width  150 } [(comps/squared-btn {:pref-width  30
+                                                              :text        "⚙"
+                                                              :style-class "app-term-btn"}
+                                                             :ui.popup.shell-settings)
+                                          (comps/squared-btn {:pref-width  50
+                                                              :text        (str ">⎽(" (data/count-pending-cmds state) ")")
+                                                              :style-class "app-term-btn"}
+                                                             :ui.terminal.toggle-show-pending-cmds)
                                           (pending-cmds state)])]))
 
 (defn session [state]
@@ -98,15 +107,15 @@
              :stylesheets [(::css/url (term-style/style))]
              :root        {:fx/type        :v-box
                            :on-key-pressed {:event/type :keypressed}
-                           :children       [{:fx/type  :h-box
+                           :children       [{:fx/type     :h-box
                                              :v-box/vgrow :always
-                                             :children [(comps/vbox [(comps/squared-btn {:pref-width 30 :text "+"} :ui.popup.new-session)
-                                                                     (comps/sidebar :ui.sidebar.click
-                                                                                    (keys (walk/stringify-keys
-                                                                                            (get state :shell-sessions))))])
-                                                        {:fx/type  :v-box
-                                                         :h-box/hgrow :always
-                                                         :children [(terminal state)]}]}]}}})
+                                             :children    [(comps/vbox [(comps/squared-btn {:pref-width 30 :text "+"} :ui.popup.new-session)
+                                                                        (comps/sidebar :ui.sidebar.click
+                                                                                       (keys (walk/stringify-keys
+                                                                                               (get state :shell-sessions))))])
+                                                           {:fx/type     :v-box
+                                                            :h-box/hgrow :always
+                                                            :children    [(terminal state)]}]}]}}})
 
 (defn root [state]
   (comps/many [(session state)
