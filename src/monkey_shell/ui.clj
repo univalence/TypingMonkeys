@@ -24,7 +24,7 @@
   [state]
   (when (= true (get-in state [:ui :pending-cmds-showing]))
     (comps/vbox (mapv (partial pending-cmd state)
-                    (:pending (data/focused-session state))))))
+                      (:pending (data/focused-session state))))))
 
 (defn end-popup
   "Purpose: confirm or cancel btns"
@@ -88,15 +88,15 @@
                                                                         :text            (get-in state [:ui :session :input])
                                                                         :on-text-changed {:event/type :ui.session.set-input}}]}]}]}}
 
-     (comps/vbox {:alignment :top-right :min-width  150 } [(comps/squared-btn {:pref-width  30
-                                                              :text        "⚙"
-                                                              :style-class "app-term-btn"}
-                                                             :ui.popup.shell-settings)
-                                          (comps/squared-btn {:pref-width  50
-                                                              :text        (str ">⎽(" (data/count-pending-cmds state) ")")
-                                                              :style-class "app-term-btn"}
-                                                             :ui.terminal.toggle-show-pending-cmds)
-                                          (pending-cmds state)])]))
+     (comps/vbox {:alignment :top-right :min-width 150} [(comps/hbox {:alignment :top-right} [(comps/squared-btn {:pref-width  30
+                                                                                          :text        "⚙"
+                                                                                          :style-class "app-term-btn"}
+                                                                                         :ui.popup.shell-settings)
+                                                                      (comps/squared-btn {:pref-width  50
+                                                                                          :text        (str ">⎽(" (data/count-pending-cmds state) ")")
+                                                                                          :style-class "app-term-btn"}
+                                                                                         :ui.terminal.toggle-show-pending-cmds)])
+                                                         (pending-cmds state)])]))
 
 (defn session [state]
   {:fx/type :stage
