@@ -41,10 +41,14 @@
               (f/->stream x)))
 
 (defn sync-session! [session]
+  (println "sync session! " (-> session :history last :out))
   (-> (f/coll db "shell-sessions")
-      (f/doc (:id session))
+      (f/doc (name (:id session)))
       (f/set! (-> session
                   (update :members (partial mapv fu/data->ref))
                   (update :host fu/data->ref)
                   (dissoc :id)
                   (walk/stringify-keys)))))
+
+(comment
+  (f/pull (fetch-user-sessions "pierrebaille@gmail.com")))

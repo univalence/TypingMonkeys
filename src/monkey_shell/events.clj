@@ -11,10 +11,12 @@
 (declare handler)
 
 (defn swap-session! [id f & args]
-  (let [session (state/get [:shell-sessions (keyword id)])
+  (let [state (state/get)
+        peer-id (get state :peer-id)
+        session (get-in state [:shell-sessions (keyword id)])
         next-session (apply f session args)]
-    (state/swap!_ (assoc-in _ [:shell-sessions id] next-session))
-    (db/sync-session! (assoc next-session :id (name id)))))
+    (dosync (state/swap!_ (assoc-in _ [:shell-sessions id] next-session))
+            (db/sync-session! (assoc next-session :id (name id) :last-updater peer-id)))))
 
 (defmacro swap-session!_ [id & forms]
   `(swap-session! ~id (fn [session#]
@@ -24,38 +26,47 @@
   ""
   [user-id]
   (let [sessions
-        (db/fetch-user-sessions user-id)]
+        (db/fetch-user-sessions user-id)
+
+        peer-id (utils/uuid)]
 
     (db/watch! sessions
                (fn [sessions-data]
-                 (state/swap! assoc :shell-sessions sessions-data)))
+                 (println "sync back !")
+                 (let [state (state/get)
+                       peer-id (:peer-id state)
+                       changes (remove #(or (= (:last-updater (val %)) peer-id)
+                                            (= (val %) (get-in state [:session-id (key %)])))
+                                       sessions-data)]
+                   (state/swap! assoc :shell-sessions merge (into {} changes)))))
 
     (state/swap!_
       (assoc _ :ui {:session {:settings {}}
                     :sidebar {}
-                    :popup   {:content (ui/error-popup)
-                              :props   {:showing false
-                                        :always-on-top true
-                                        :style :undecorated}}}
-
+                    :popup {:content (ui/error-popup)
+                            :props {:showing false
+                                    :always-on-top true
+                                    :style :undecorated}}}
+               :peer-id peer-id
                :user (db/fetch-user user-id)
                :shell-sessions (db/pull-walk sessions))
       (data/with-focus _))))
 
 (defn sync-session! []
-  (db/sync-session! (state/get :session)))
+  (db/sync-session! (data/focused-session (state/get))))
 
 (defn execute!
-  ([] (let [state (state/get)
-            cmd-args (str/split (get-in state [:ui :session :input]) #" ")]
-        (execute! {:cmd-args cmd-args})))
+  ([] (let [state (state/get)]
+        (execute! {:text (get-in state [:ui :session :input])})))
 
-  ([{:as cmd :keys [cmd-args]}]
+  ([{:as cmd :keys [text]}]
    (let [state (state/get)
          session-id (keyword (:focused-session state))
+         session (data/focused-session state)
          cmd (merge cmd
-                    (shell/context)
-                    {:from (get-in state [:user :id])
+                    {:pwd (get-in session [:env :PWD])
+                     :user (shell/whoami)
+                     :from (get-in state [:user :id])
                      :id (utils/uuid)
                      :out ""})]
 
@@ -64,14 +75,21 @@
                            (assoc _ :running true)
                            (update _ :history conj cmd))
 
-           (shell/execute cmd-args
-                          (fn [ret]
-                            (swap-session!_ session-id
-                                            (update _ :history
-                                                    #(conj (pop %)
-                                                           (assoc cmd :out (str (:out (last %)) ret))))))
-                          (fn []
-                            (swap-session!_ session-id (dissoc _ :running)))))
+           (shell/execute (assoc cmd
+                            :env (:env session)
+                            :on-out
+                            (fn [ret]
+                              (println "on out")
+                              (swap-session!_ session-id
+                                              (update _ :history
+                                                      #(conj (pop %)
+                                                             (assoc cmd :out (str (:out (last %)) ret))))))
+                            :on-done
+                            (fn [_process env-diff]
+                              (println "done! " env-diff)
+                              (swap-session!_ session-id
+                                              (dissoc _ :running)
+                                              (update _ :env (fnil merge {}) env-diff))))))
 
        (swap-session!_ session-id
                        (update _ :pending
@@ -93,7 +111,7 @@
         session (data/focused-session state)]
     #_(when (seq (:pending session))
         (handler {:event/type :ui.popup.set-content
-                  :content    (ui/command-confirmation-popup (:pending session))}))
+                  :content (ui/command-confirmation-popup (:pending session))}))
     (state/swap! data/with-focus session-id)))
 
 (defn handler
@@ -146,7 +164,7 @@
     :ui.popup.new-session
     (do
       (handler {:event/type :ui.popup.set-content
-                :content    (ui/new-session-popup)})
+                :content (ui/new-session-popup)})
       (handler {:event/type :ui.popup.show}))
 
     :ui.popup.confirm-new-session
@@ -157,7 +175,7 @@
     :ui.popup.shell-settings
     (do
       (handler {:event/type :ui.popup.set-content
-                :content    (ui/terminal-settings-popup (state/get))})
+                :content (ui/terminal-settings-popup (state/get))})
       (handler {:event/type :ui.popup.show}))
 
     :ui.popup.show
@@ -171,7 +189,5 @@
 
     :ui.terminal.toggle-show-pending-cmds
     (state/put! [:ui :pending-cmds-showing] (not (state/get [:ui :pending-cmds-showing])))
-
-
 
     ))

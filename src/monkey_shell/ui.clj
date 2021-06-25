@@ -51,9 +51,9 @@
                 (get-in state [:ui :popup :content])))
 
 (defn cmds->terminal-string [cmds]
-  (reduce (fn [s {:as cmd :keys [cmd-args out dir user]}]
-            (str s "\n" (shell/prompt-string user dir)
-                 (str/join " " cmd-args)
+  (reduce (fn [s {:as cmd :keys [text out pwd user]}]
+            (str s "\n" (shell/prompt-string user pwd)
+                 text
                  "\n\n" out))
           ""
           cmds))
@@ -61,32 +61,35 @@
 (defn terminal
   "Terminal component"
   [state]
-  (comps/hbox
-    {:padding     0
-     :style-class "app-code"
-     :pref-width  800
-     :pref-height 400
-     :v-box/vgrow :always
-     :spacing     0}
+  (let [session (data/focused-session state)]
+    (println "session env: " (:env session))
+    (comps/hbox
+      {:padding 0
+       :style-class "app-code"
+       :pref-width 800
+       :pref-height 400
+       :v-box/vgrow :always
+       :spacing 0}
 
-    [{:fx/type     :scroll-pane
-      :vvalue      1.0
-      :style-class "app-code"
-      :h-box/hgrow :always
-      :content     {:fx/type  :v-box
+      [{:fx/type :scroll-pane
+        :vvalue 1.0
+        :style-class "app-code"
+        :h-box/hgrow :always
+        :content {:fx/type :v-box
 
-                    :children [{:fx/type     :label
-                                :style-class "app-code"
-                                :text        (cmds->terminal-string (take-last 10 (:history (data/focused-session state))))}
-                               {:fx/type  :h-box
-                                :children [{:fx/type     :label
-                                            :style-class "app-code"
-                                            :text        (shell/prompt-string)}
-                                           {:fx/type :h-box :children [{:fx/type         :text-field
-                                                                        :style-class     "app-text-field"
-                                                                        :prompt-text     "_"
-                                                                        :text            (get-in state [:ui :session :input])
-                                                                        :on-text-changed {:event/type :ui.session.set-input}}]}]}]}}
+                  :children [{:fx/type :label
+                              :style-class "app-code"
+                              :text (cmds->terminal-string (take-last 10 (:history session)))}
+                             {:fx/type :h-box
+                              :children [{:fx/type :label
+                                          :style-class "app-code"
+                                          :text (shell/prompt-string (get-in session [:env :USER])
+                                                                     (get-in session [:env :PWD]))}
+                                         {:fx/type :h-box :children [{:fx/type :text-field
+                                                                      :style-class "app-text-field"
+                                                                      :prompt-text "_"
+                                                                      :text (get-in state [:ui :session :input])
+                                                                      :on-text-changed {:event/type :ui.session.set-input}}]}]}]}}
 
      (comps/vbox {:alignment :top-right :min-width 150} [(comps/hbox {:alignment :top-right} [(comps/squared-btn {:pref-width  30
                                                                                           :text        "⚙"
@@ -97,6 +100,7 @@
                                                                                           :style-class "app-term-btn"}
                                                                                          :ui.terminal.toggle-show-pending-cmds)])
                                                          (pending-cmds state)])]))
+
 
 (defn session [state]
   {:fx/type :stage

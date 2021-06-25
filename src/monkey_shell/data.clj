@@ -2,8 +2,9 @@
 
 (defn new-session
   [id user]
-  {:id      id
-   :host    user
+  {:env (select-keys (System/getenv) ["PWD" "USER"])
+   :id id
+   :host user
    :members [user]
    :history []})
 
