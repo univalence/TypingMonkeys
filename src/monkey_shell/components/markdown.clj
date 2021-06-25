@@ -248,7 +248,7 @@
   {:fx/type :stage
    :showing true
    :scene {:fx/type :scene
-           :stylesheets ["markdown.css" #_(::css/url (markdown-style/style))]
+           :stylesheets ["markdown.css"]
            :root {:fx/type :grid-pane
                   :padding 10
                   :hgap 10
@@ -262,8 +262,6 @@
                                :grid-pane/column 0)
                              (assoc (note-preview state)
                                :grid-pane/column 1)]}}})
-
-(root @state)
 
 (def renderer
   (fx/create-renderer

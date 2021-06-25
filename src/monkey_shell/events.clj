@@ -25,20 +25,14 @@
 (defn init!
   ""
   [user-id]
-  (let [sessions
-        (db/fetch-user-sessions user-id)
-
+  (let [sessions (db/fetch-user-sessions user-id)
         peer-id (utils/uuid)]
 
-    (db/watch! sessions
-               (fn [sessions-data]
-                 (println "sync back !")
-                 (let [state (state/get)
-                       peer-id (:peer-id state)
-                       changes (remove #(or (= (:last-updater (val %)) peer-id)
-                                            (= (val %) (get-in state [:session-id (key %)])))
-                                       sessions-data)]
-                   (state/swap! assoc :shell-sessions merge (into {} changes)))))
+    (db/watch-sessions!
+      user-id
+      (fn [session-id session]
+        (when-not (= (state/get :peer-id) (:last-updater session))
+          (state/swap! assoc-in [:shell-sessions (keyword session-id)] session))))
 
     (state/swap!_
       (assoc _ :ui {:session {:settings {}}
