@@ -96,3 +96,5 @@
                                      "> .increment-button" {:-fx-padding         0
                                                             "> .increment-arrow" {:-fx-shape   nil
                                                                                   :-fx-padding 0}}}}))))
+
+(comment (style))
