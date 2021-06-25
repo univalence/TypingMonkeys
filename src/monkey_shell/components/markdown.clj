@@ -173,8 +173,7 @@
   {:fx/type :v-box
    :style-class "document"
    :children (for [node children]
-               {:fx/type md-view
-                :node node})})
+               (md-view {:node node}))})
 
 (defmethod md->fx :image [{{:keys [destination]} :attrs}]
   {:fx/type :image-view
@@ -232,8 +231,7 @@
               {:fx/type :v-box
                :padding {:left 10}
                :children (for [node children]
-                           {:fx/type md-view
-                            :node node})}]})
+                           (md-view {:node node}))}]})
 
 (defn note-input [state]
   {:fx/type :text-area
@@ -250,7 +248,7 @@
   {:fx/type :stage
    :showing true
    :scene {:fx/type :scene
-           :stylesheets [(::css/url (markdown-style/style))]
+           :stylesheets ["markdown.css" #_(::css/url (markdown-style/style))]
            :root {:fx/type :grid-pane
                   :padding 10
                   :hgap 10
