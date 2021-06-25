@@ -19,6 +19,9 @@
 
   com.middlesphere/clj-terminal {:mvn/version "0.1.0-beta"}
 
+  org.commonmark/commonmark {:mvn/version "0.17.2"}
+
+  de.codecentric.centerdevice/javafxsvg {:mvn/version "1.3.0"}
   }
 
  :aliases
