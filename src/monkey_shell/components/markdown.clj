@@ -15,10 +15,9 @@
 
 (SvgImageLoaderFactory/install (PrimitiveDimensionProvider.))
 
-(def *context
+(def state
   (atom
-    (fx/create-context {:typed-text (slurp "./README.md")}
-                       #(cache/lru-cache-factory % :threshold 4096))))
+    {:typed-text (slurp "./README.md")}))
 
 (defn commonmark->clj [^Node node]
   (let [tag (->> node
@@ -47,10 +46,11 @@
                     (take-while some?)
                     (mapv commonmark->clj))}))
 
-(defn node-sub [context]
+(defn node-sub [text]
+  (println "text " text)
   (-> (Parser/builder)
       .build
-      (.parse (fx/sub-val context :typed-text))
+      (.parse text)
       commonmark->clj))
 
 (defmulti handle-event :event/type)
@@ -58,8 +58,8 @@
 (defmethod handle-event :default [e]
   (prn e))
 
-(defmethod handle-event ::type-text [{:keys [fx/event fx/context]}]
-  {:context (fx/swap-context context assoc :typed-text event)})
+(defmethod handle-event ::type-text [{:keys [fx/event]}]
+  (swap! state assoc :typed-text event))
 
 (defmulti md->fx :tag)
 
@@ -70,8 +70,7 @@
   {:fx/type :text-flow
    :style-class ["heading" (str "level-" level)]
    :children (for [node children]
-               {:fx/type md-view
-                :node node})})
+               (md-view {:node node}))})
 
 (defmethod md->fx :paragraph [{children :children}]
   {:fx/type :text-flow
@@ -236,36 +235,41 @@
                            {:fx/type md-view
                             :node node})}]})
 
-(defn note-input [{:keys [fx/context]}]
+(defn note-input [state]
   {:fx/type :text-area
    :style-class "input"
-   :text (fx/sub-val context :typed-text)
+   :text (:typed-text state)
    :on-text-changed {:event/type ::type-text :fx/sync true}})
 
-(defn note-preview [{:keys [fx/context]}]
+(defn note-preview [state]
   {:fx/type :scroll-pane
    :fit-to-width true
-   :content {:fx/type md-view
-             :node (fx/sub-ctx context node-sub)}})
+   :content (md-view {:node (node-sub (:typed-text state))})})
 
-(def app
-  (fx/create-app *context
-                 :event-handler handle-event
-                 :desc-fn (fn [_]
-                            {:fx/type :stage
-                             :showing true
-                             :scene {:fx/type :scene
-                                     :stylesheets [(::css/url (markdown-style/style))]
-                                     :root {:fx/type :grid-pane
-                                            :padding 10
-                                            :hgap 10
-                                            :column-constraints [{:fx/type :column-constraints
-                                                                  :percent-width 100/2}
-                                                                 {:fx/type :column-constraints
-                                                                  :percent-width 100/2}]
-                                            :row-constraints [{:fx/type :row-constraints
-                                                               :percent-height 100}]
-                                            :children [{:fx/type note-input
-                                                        :grid-pane/column 0}
-                                                       {:fx/type note-preview
-                                                        :grid-pane/column 1}]}}})))
+(defn root [state]
+  {:fx/type :stage
+   :showing true
+   :scene {:fx/type :scene
+           :stylesheets [(::css/url (markdown-style/style))]
+           :root {:fx/type :grid-pane
+                  :padding 10
+                  :hgap 10
+                  :column-constraints [{:fx/type :column-constraints
+                                        :percent-width 100/2}
+                                       {:fx/type :column-constraints
+                                        :percent-width 100/2}]
+                  :row-constraints [{:fx/type :row-constraints
+                                     :percent-height 100}]
+                  :children [(assoc (note-input state)
+                               :grid-pane/column 0)
+                             (assoc (note-preview state)
+                               :grid-pane/column 1)]}}})
+
+(root @state)
+
+(def renderer
+  (fx/create-renderer
+    :middleware (fx/wrap-map-desc assoc :fx/type root)
+    :opts {:fx.opt/map-event-handler handle-event}))
+
+(fx/mount-renderer state renderer)
