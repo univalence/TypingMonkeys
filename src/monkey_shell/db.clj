@@ -35,7 +35,6 @@
 
 (defn watch! [x callback]
   (st/consume (fn [x]
-                #_(println "consume " x)
                 (let [data (pull-walk x)]
                   (callback data)))
               (f/->stream x)))
@@ -50,5 +49,12 @@
                   (dissoc :id)
                   (walk/stringify-keys)))))
 
+(defn watch-sessions! [user-id callback]
+  (doseq [id (mapv first (f/pull (fetch-user-sessions user-id)))]
+    (st/consume (fn [session]
+                  (println "session change " id)
+                  (callback id (pull-walk session)))
+                (f/->stream (f/doc db (str "shell-sessions/" id))))))
+
 (comment
-  (f/pull (fetch-user-sessions "pierrebaille@gmail.com")))
+  (watch-sessions! "pierrebaille@gmail.com" identity))

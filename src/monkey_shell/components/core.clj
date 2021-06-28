@@ -1,6 +1,5 @@
 (ns monkey-shell.components.core
-  (:require [cljfx.api :as fx]
-            [monkey-shell.components.markdown :as md]))
+  (:require [cljfx.api :as fx]))
 
 (defn many
   "Component that allow multiple window-ing"
@@ -80,22 +79,3 @@
   [id->true?]
   (vbox
     (mapv #(radio-btn (last %) :fixme (first %)) id->true?)))
-
-(defn markdown-cell [state]
-  {:fx/type :scene
-   :stylesheets ["markdown.css" #_(::css/url (markdown-style/style))]
-   :root {:fx/type :grid-pane
-          :padding 10
-          :hgap 10
-          :column-constraints [{:fx/type :column-constraints
-                                :percent-width 100/2}
-                               {:fx/type :column-constraints
-                                :percent-width 100/2}]
-          :row-constraints [{:fx/type :row-constraints
-                             :percent-height 100}]
-          :children [(assoc (md/note-input state)
-                       :grid-pane/column 0)
-                     (assoc (md/note-preview state)
-                       :grid-pane/column 1)]}})
-
-

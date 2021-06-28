@@ -4,6 +4,7 @@
   -fx-font-size: 14;
   -fx-text-fill: #ddd;
   -fx-fill: #ddd;
+  -fx-background-color: #444;
 }
 
 .root {
@@ -142,4 +143,5 @@
 
 .input {
   -fx-font-family: "Ubuntu Mono";
+    -fx-pref-height: 500;
 }
