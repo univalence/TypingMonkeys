@@ -242,7 +242,7 @@
 (defn note-input [state]
   {:fx/type         :text-area
    :style-class     "input"
-   :v-box/vgrow :always
+   :v-box/vgrow     :always
    :text            (:typed-text state)
    :on-text-changed {:event/type ::type-text :fx/sync true}})
 
@@ -254,14 +254,14 @@
 (defn root [state]
   {:fx/type :stage
    :showing true
-   :scene   {:fx/type     :scene
+   :scene   {:fx/type :scene
              :stylesheets ["markdown.css"]
-             :root        (if (:editing state) (comps/vbox [(comps/hbox [(comps/squared-btn {:pref-width 100
-                                                                                             :text       "EDIT"} ::click-edit)])
-                                                            (note-preview state)])
-                                               (comps/vbox [(comps/hbox [(comps/squared-btn {:pref-width 100
-                                                                                             :text       "PREVIEW"} ::click-edit)])
-                                                            (note-input state)]))}})
+             :root    (if (:editing state) (comps/vbox [(comps/hbox [(comps/squared-btn {:pref-width 100
+                                                                                         :text       "EDIT"} ::click-edit)])
+                                                        (note-preview state)])
+                                           (comps/vbox [(comps/hbox [(comps/squared-btn {:pref-width 100
+                                                                                         :text       "PREVIEW"} ::click-edit)])
+                                                        (note-input state)]))}})
 
 (def renderer
   (fx/create-renderer

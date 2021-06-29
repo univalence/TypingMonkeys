@@ -9,9 +9,8 @@
             [monkey-shell.components.core :as comps]))
 
 (def *state (atom {
-                   :journal-cells   {1 {:content (comps/squared-btn {:h-box/hgrow :always :text "random btn"} :mock)}
-                                     2 {}
-                                     3 {}}
+                   :journal-cells   [{:content (comps/squared-btn {:h-box/hgrow :always :text "random btn"} :mock)}
+                                     {:content (comps/squared-btn {:h-box/hgrow :always :text "random btn 2"} :mock)}]
 
                    :ui              {:session {:settings {}},
                                      :sidebar {},

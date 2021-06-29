@@ -2,23 +2,23 @@
   -fx-line-spacing: 4;
   -fx-font-family: Ubuntu;
   -fx-font-size: 14;
-  -fx-text-fill: #ddd;
-  -fx-fill: #ddd;
-  -fx-background-color: #444;
+  -fx-text-fill: #000000;
+  -fx-fill: #000000;
+  -fx-background-color: #000000;
 }
 
 .root {
-  -fx-background-color: #444;
+  -fx-background-color: #000000;
 }
 
 .scroll-pane {
-  -fx-background-color: transparent;
+  -fx-background-color: #000000;
 }
 .scroll-pane > .viewport {
-  -fx-background-color: transparent;
+  -fx-background-color: #000000;
 }
 .scroll-pane > .scroll-bar {
-  -fx-background-color: transparent;
+  -fx-background-color: #000000;
 }
 .scroll-pane > .scroll-bar > .increment-button,
 .scroll-pane > .scroll-bar > .increment-button > .increment-arrow,
