@@ -65,6 +65,7 @@
                      :out ""})]
 
      (if (data/host-session? state session-id)
+
        (do (swap-session!_ session-id
                            (assoc _ :running true)
                            (update _ :history conj cmd))
@@ -101,12 +102,7 @@
   (sync-session!))
 
 (defn focus-session! [session-id]
-  (let [state (state/get)
-        session (data/focused-session state)]
-    #_(when (seq (:pending session))
-        (handler {:event/type :ui.popup.set-content
-                  :content (ui/command-confirmation-popup (:pending session))}))
-    (state/swap! data/with-focus session-id)))
+  (state/swap! data/with-focus session-id))
 
 (defn handler
   [event]
