@@ -5,7 +5,8 @@
             [cljfx.css :as css]
             [monkey-shell.style.markdown :as markdown-style]
             [monkey-shell.components.core :as comps]
-            [monkey-shell.style.terminal :as term-style])
+            [monkey-shell.style.terminal :as term-style]
+            [monkey-shell.style.mixins :as mx])
   (:import [de.codecentric.centerdevice.javafxsvg SvgImageLoaderFactory]
            [de.codecentric.centerdevice.javafxsvg.dimension PrimitiveDimensionProvider]
            [java.awt Desktop]
@@ -13,7 +14,6 @@
            [java.net URI]
            [org.commonmark.node Node]
            [org.commonmark.parser Parser]))
-
 
 (SvgImageLoaderFactory/install (PrimitiveDimensionProvider.))
 
@@ -73,17 +73,19 @@
   (md->fx node))
 
 (defmethod md->fx :heading [{children :children {:keys [level]} :attrs}]
-  {:fx/type     :text-flow
-   :style-class ["heading" (str "level-" level)]
-   :children    (for [node children]
-                  (md-view {:node node}))})
+  {:fx/type  :text-flow
+   #_(:style-class ["heading" (str "level-" level)])
+   :style    (mx/header level)
+   :children (for [node children]
+               (md-view {:node node}))})
 
 (defmethod md->fx :paragraph [{children :children}]
-  {:fx/type     :text-flow
-   :style-class "paragraph"
-   :children    (for [node children]
-                  {:fx/type md-view
-                   :node    node})})
+  {:fx/type  :text-flow
+   #_(:style-class "paragraph")
+   :style    mx/paragraph
+   :children (for [node children]
+               {:fx/type md-view
+                :node    node})})
 
 (defmethod md->fx :text [{{:keys [literal]} :attrs}]
   {:fx/type    :text
@@ -92,17 +94,18 @@
    :text       literal})
 
 (defmethod md->fx :code [{{:keys [literal]} :attrs}]
-  {:fx/type     :label
-   :cache       true
-   :cache-hint  :speed
-   :style-class "code"
-   :text        literal})
+  {:fx/type    :label
+   :cache      true
+   :cache-hint :speed
+   :style      mx/code
+   :text       literal})
 
 (defmethod md->fx :fenced-code-block [{{:keys [literal]} :attrs}]
   {:fx/type  :v-box
    :padding  {:top 9}
    :children [{:fx/type      :scroll-pane
-               :style-class  ["scroll-pane" "code-block"]
+               :style        (merge mx/scroll-pane mx/code-block)
+               #_(:style-class ["scroll-pane" "code-block"])
                :fit-to-width true
                :content      {:fx/type    :label
                               :cache      true
@@ -115,7 +118,7 @@
   {:fx/type  :v-box
    :padding  {:top 9}
    :children [{:fx/type      :scroll-pane
-               :style-class  ["scroll-pane" "code-block"]
+               :style        (merge mx/scroll-pane mx/code-block)
                :fit-to-width true
                :content      {:fx/type    :label
                               :cache      true
@@ -145,14 +148,17 @@
 (defmethod md->fx :strong-emphasis [{:keys [children]}]
   (if (and (= 1 (count children))
            (= :text (:tag (first children))))
-    {:fx/type     :text
-     :cache       true
-     :cache-hint  :speed
-     :style-class "strong-emphasis"
-     :text        (-> children first :attrs :literal)}
+    {:fx/type    :text
+     :cache      true
+     :cache-hint :speed
+     #_(:style-class "strong-emphasis")
+     :style      mx/strong-emphasis
+
+     :text       (-> children first :attrs :literal)}
     {:fx/type     :h-box
      :cache       true
-     :style-class "strong-emphasis"
+     #_(:style-class "strong-emphasis")
+     :style      mx/strong-emphasis
      :children    (for [node children]
                     {:fx/type md-view
                      :node    node})}))
@@ -163,10 +169,12 @@
     {:fx/type     :text
      :cache       true
      :cache-hint  :speed
-     :style-class "emphasis"
+     #_(:style-class "emphasis")
+     :style      mx/emphasis
      :text        (-> children first :attrs :literal)}
     {:fx/type     :h-box
-     :style-class "emphasis"
+     #_(:style-class "emphasis")
+     :style      mx/emphasis
      :children    (for [node children]
                     {:fx/type md-view
                      :node    node})}))
@@ -190,7 +198,8 @@
 
 (defmethod md->fx :bullet-list [{{:keys [bullet-marker]} :attrs children :children}]
   {:fx/type     :v-box
-   :style-class "md-list"
+   #_(:style-class "md-list")
+   :style      mx/md-list
    :children    (for [node children]
                   {:fx/type   :h-box
                    :alignment :baseline-left
@@ -206,7 +215,8 @@
 (defmethod md->fx :ordered-list [{{:keys [delimiter start-number]} :attrs
                                   children                         :children}]
   {:fx/type     :v-box
-   :style-class "md-list"
+   #_(:style-class "md-list")
+   :style      mx/md-list
    :children    (map (fn [child number]
                        {:fx/type   :h-box
                         :alignment :baseline-left
@@ -255,7 +265,7 @@
   {:fx/type :stage
    :showing true
    :scene   {:fx/type :scene
-             :stylesheets ["markdown.css"]
+             #_(:stylesheets ["monkey_shell/style/markdown.css"])
              :root    (if (:editing state) (comps/vbox [(comps/hbox [(comps/squared-btn {:pref-width 100
                                                                                          :text       "EDIT"} ::click-edit)])
                                                         (note-preview state)])
