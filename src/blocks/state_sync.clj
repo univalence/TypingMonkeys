@@ -51,6 +51,25 @@
         new-state (apply core/swap! atom f args)]
     (f/set! ref (clojure.walk/stringify-keys new-state))))
 
+
+
+(defn ???
+  [id]
+
+  (let [ref (f/doc db id)
+
+        _ (assert (seq (f/pull ref))
+                  "non existant document,
+                   please consider using 'initialize-document")
+
+        *m (atom (pull-walk ref))]
+
+    (watch! ref
+            (fn [x]
+              (when (not= @*m x)
+                (core/reset! *m x))))
+    *m))
+
 (defn initialize-document
 
   "create a firestore document with the given id and data
