@@ -7,7 +7,7 @@
             [typing-monkeys.utils.firestore :as fu]
             [manifold.stream :as st])
   (:import (java.util HashMap ArrayList)
-           (clojure.lang IDeref)))
+           (clojure.lang IDeref IRef)))
 
 ; ---- firebase machinery ----
 

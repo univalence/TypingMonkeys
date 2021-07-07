@@ -20,6 +20,7 @@
             :showing true
             :scene {:fx/type :scene
                     :root {:fx/type :v-box
+                    :root {:fx/type :v-box
                            :children [(counter state)]}}})
 
          (defn handler
