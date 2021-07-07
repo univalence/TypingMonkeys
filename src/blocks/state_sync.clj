@@ -47,9 +47,48 @@
    and does synchronize the corresponding firestore document as well"
 
   [atom f & args]
+  (println "swap! " atom f args)
   (let [ref (fu/data->ref @atom)
         new-state (apply core/swap! atom f args)]
     (f/set! ref (clojure.walk/stringify-keys new-state))))
+
+(defrecord DBAtom [atom ref watches]
+  clojure.lang.IDeref
+  (deref [_] @atom)
+  clojure.lang.IAtom
+  (swap [_ f]
+    (let [new-data (f @atom)]
+      (f/set! ref (clojure.walk/stringify-keys new-data))
+      new-data))
+  (swap [_ f x] (core/swap! _ #(f % x)))
+  (swap [_ f x y] (core/swap! _ #(f % x y)))
+  (swap [_ f x y zs] (core/swap! _ #(apply f % x y zs)))
+  IRef
+  (addWatch [this key callback]
+    (let [watcher (fn watcher-fn [event]
+                    (when (contains? @watches key)
+                      (when (= :NodeDataChanged (:event-type event))
+                        (let [new-value (.deref this)]
+                          (callback key this nil new-value)))))]
+      (core/swap! watches assoc key watcher)
+      this))
+  (getWatches [_] @watches)
+  (removeWatch [this key] (swap! watches dissoc key) this)
+  (setValidator [_ _] nil)
+  (getValidator [_] nil)
+
+  )
+
+(defmethod print-method DBAtom [this w]
+  (print-method 'DBAtom w))
+
+(defn db-atom [ref]
+  (let [a (atom (pull-walk ref))]
+    (watch! ref
+            (fn [x]
+              (when (not= @a x)
+                (core/reset! a x))))
+    (DBAtom. a ref (atom {}))))
 
 (defn existing-ref?
   [ref]
@@ -63,20 +102,13 @@
 
   [id]
 
-  (let [ref (f/doc db id)
+  (let [ref (f/doc db id)]
+    (assert (existing-ref? ref)
+            "non existant document,
+             please consider using 'initialize-document")
+    (db-atom ref)))
 
-        _ (assert (existing-ref? ref)
-                  "non existant document,
-                   please consider using 'initialize-document")
 
-        *m (with-meta (atom (pull-walk ref))
-                      {:db/ref ref})]
-
-    (watch! ref
-            (fn [x]
-              (when (not= @*m x)
-                (core/reset! *m x))))
-    *m))
 
 (defn create-document
 
@@ -85,16 +117,9 @@
 
   [id data]
 
-  (let [ref (f/doc db id)
-        *m (with-meta (atom data) {:db/ref ref})]
-
+  (let [ref (f/doc db id)]
     (f/set! ref (clojure.walk/stringify-keys data))
-
-    (watch! ref
-            (fn [x]
-              (when (not= @*m x)
-                (core/reset! *m x))))
-    *m))
+    (db-atom ref)))
 
 (defn bind-document
 
@@ -139,7 +164,7 @@
              ;; => (pair 1 2)
              )
 
-    (defrecord AtomLens [data get set]
+    (defrecord AtomLens [data get set watches #_validator]
       clojure.lang.IDeref
       (deref [_] (get data))
       clojure.lang.IAtom
@@ -147,6 +172,19 @@
       (swap [_ f x] (core/swap! _ #(f % x)))
       (swap [_ f x y] (core/swap! _ #(f % x y)))
       (swap [_ f x y zs] (core/swap! _ #(apply f % x y zs)))
+      IRef
+      (addWatch [this key callback]
+        (let [watcher (fn watcher-fn [event]
+                        (when (contains? @watches key)
+                          (when (= :NodeDataChanged (:event-type event))
+                            (let [new-value (.deref this)]
+                              (callback key this nil new-value)))))]
+          (core/swap! watches assoc key watcher)
+          this))
+      (getWatches [_] @watches)
+      (removeWatch [this key] (swap! watches dissoc key) this)
+      (setValidator [_ _] nil)
+      (getValidator [_] nil)
       )
 
     (defmethod print-method AtomLens [this w]
@@ -154,12 +192,15 @@
 
     (defn atom-lens-class [get set]
       (fn [data]
-        (AtomLens. data get set)))
+        (AtomLens. data get set (atom {}))))
 
     (def ref-map
       (atom-lens-class
         (fn [m] (into {} (map (fn [[k v]] [k (deref v)]) m)))
-        (fn [m value] (mapv #(reset! (m %) (value %)) (keys m)))))
+        (fn [m value]
+          (doseq [k (keys m)]
+            (reset! (m k) (value k)))
+          value)))
 
     (def c0 (atom {:count 0}))
     (def c1 (atom {:count 1}))
@@ -219,7 +260,7 @@
             (atom? data) (reset! data value)
             :else value))))
 
-    (deref (ref-coll 12))
+    (deref (composite-ref 12))
 
     (comment :ex3
              (def rc (composite-ref
