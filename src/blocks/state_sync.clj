@@ -164,7 +164,7 @@
              ;; => (pair 1 2)
              )
 
-    (do :atom-lens_deprecated
+    (comment :atom-lens_deprecated
 
         (defrecord AtomLens [structure get set watches]
           clojure.lang.IDeref
@@ -302,6 +302,12 @@
 
     (do :catom
 
+        (defn map-vals
+          "(= (map-vals inc {:a 1 :b 2})
+              {:a 2 :b 3})"
+          [f m]
+          (zipmap (keys m) (map f (vals m))))
+
         (defn notify-watches
           [this watches v newv]
           (doseq [[k f] watches]
@@ -310,26 +316,30 @@
               (catch Exception e
                 (throw (RuntimeException. e))))))
 
+        (declare atom?)
+
         (defn catom_deref [struct]
           (cond
+            (atom? struct) (deref struct)
             (map? struct) (map-vals catom_deref struct)
             (vector? struct) (mapv catom_deref struct)
-            (atom? struct) (deref struct)
             :else struct))
 
         (defn catom_reset! [struct value]
+
           (cond
+            (atom? struct) (reset! struct value)
             (map? struct) (merge-with catom_reset! struct value)
             (vector? struct) (mapv catom_reset! struct value)
-            (atom? struct) (reset! struct value)
             :else value))
 
         (defn catom_dosub
           [x f]
           (cond
+            (atom? x) (f x)
             (map? x) (doseq [v (vals x)] (catom_dosub v f))
             (vector? x) (doseq [v x] (catom_dosub v f))
-            (atom? x) (f x)))
+            ))
 
         (defn catom_hook-subs
           "attach watches to every sub ref of a catom
@@ -368,11 +378,23 @@
         (defmethod print-method Catom [this w]
           (print-method (list 'catom (deref this)) w))
 
+        (defn atom? [x]
+          (or (instance? DBAtom x)
+              (instance? Catom x)
+              (instance? clojure.lang.Atom x)))
+
         (defn catom [structure]
           (catom_hook-subs
             (Catom. structure (atom {}) (atom identity))))
 
         (comment :ex1
+
+                 (def c1 (bind-document "scratch/compteur-1" {:count 0}))
+
+                 (atom? c1)
+
+                 (def cat2 (catom [c1]))
+                 (deref cat2)
 
                  (def a1 (atom 0))
                  (def a2 (atom 0))

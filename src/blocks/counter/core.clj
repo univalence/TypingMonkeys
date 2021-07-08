@@ -6,34 +6,34 @@
 
 ; ---- fx machinery ----
 
-(do :ex1
+(comment :ex1
 
-    (defn counter [state]
-      (comps/hbox [(comps/squared-btn {:text "+"} :increment)
-                   {:fx/type :label
-                    :text (str (get state :count))}]))
+         (defn counter [state]
+           (comps/hbox [(comps/squared-btn {:text "+"} :increment)
+                        {:fx/type :label
+                         :text (str (get state :count))}]))
 
-    (def *state (sync/bind-document "scratch/compteur-1" {:count 0}))
+         (def *state (sync/bind-document "scratch/compteur-1" {:count 0}))
 
-    (defn root [state]
-      {:fx/type :stage
-       :showing true
-       :scene {:fx/type :scene
-               :root {:fx/type :v-box
-                      :children [(counter state)]}}})
+         (defn root [state]
+           {:fx/type :stage
+            :showing true
+            :scene {:fx/type :scene
+                    :root {:fx/type :v-box
+                           :children [(counter state)]}}})
 
-    (defn handler
-      [event]
-      (case (:event/type event)
-        :increment (swap! *state update :count inc)))
+         (defn handler
+           [event]
+           (case (:event/type event)
+             :increment (swap! *state update :count inc)))
 
-    (root (deref *state))
+         (root (deref *state))
 
-    (fx/mount-renderer
-      *state
-      (fx/create-renderer
-        :middleware (fx/wrap-map-desc assoc :fx/type root)
-        :opts {:fx.opt/map-event-handler handler})))
+         (fx/mount-renderer
+           *state
+           (fx/create-renderer
+             :middleware (fx/wrap-map-desc assoc :fx/type root)
+             :opts {:fx.opt/map-event-handler handler})))
 
 (defonce c1 (sync/bind-document "scratch/compteur-1" {:count 0}))
 (defonce c2 (sync/bind-document "scratch/compteur-2" {:count 0}))
